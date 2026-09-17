@@ -1,0 +1,87 @@
+/* Canvas Styles — driven by data-canvas attribute on <html> */
+
+/* ─── Links ─── */
+.tiptap a {
+  color: var(--link-color);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.tiptap a:hover {
+  color: var(--link-hover);
+}
+.tiptap a:visited {
+  color: var(--link-visited);
+}
+
+/* Internal doc links — solid underline, accent color. Visually distinct from
+ * inbound `.linked-paragraph` markers (which are dotted gray on the block).
+ * Outbound = "click to navigate"; inbound = "someone points here." Same
+ * substrate (underline), opposite directions, different presentations. */
+.tiptap .doc-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-style: solid;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: color 0.15s ease, filter 0.15s ease;
+}
+.tiptap .doc-link:hover {
+  filter: brightness(0.85);
+}
+
+/* Seamless (default — no data-canvas attribute): the bordered styles below
+ * push their content down with a 3rem .tiptap top padding, so without a
+ * matching offset seamless crowds the topbar. Give it the same top breathing
+ * room (only the top — seamless keeps its borderless sides). */
+html:not([data-canvas]) .tiptap {
+  padding-top: 3rem;
+}
+
+/* Outline: thin border around content column */
+[data-canvas="outline"] .tiptap {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3rem 2.5rem;
+}
+
+/* Page: paper-on-desk — the desk around the page must read as a surface
+ * clearly apart from the paper (light-mode mix 14%: 8% washed out on TN
+ * panels); dark mode restores the subtler desk. */
+[data-canvas="page"] .editor-container {
+  background: color-mix(in srgb, var(--bg-primary), #808080 14%);
+}
+[data-mode="dark"][data-canvas="page"] .editor-container {
+  background: color-mix(in srgb, var(--bg-primary), #808080 8%);
+}
+[data-canvas="page"] .tiptap {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+  padding: 3rem 2.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Paper: fixed 8.5" width letter emulation */
+[data-canvas="paper"] .editor-container {
+  background: color-mix(in srgb, var(--bg-primary), #808080 14%);
+}
+[data-mode="dark"][data-canvas="paper"] .editor-container {
+  background: color-mix(in srgb, var(--bg-primary), #808080 8%);
+}
+[data-canvas="paper"] .tiptap {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+  width: 816px;
+  max-width: 100%;
+  padding: 4rem 4rem;
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+}

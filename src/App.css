@@ -1,0 +1,1537 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-primary);
+  color: var(--ink-dark);
+  -webkit-font-smoothing: antialiased;
+  /* Floor: below the app's min-width the viewport scrolls rather than squishing
+   * the doc further. Only engages on very narrow windows (< 360px). */
+  overflow-x: auto;
+}
+
+.app {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  overflow: hidden;
+  /* Anchor for the overlay-mode floating panels + scrim (position: absolute). */
+  position: relative;
+  /* Doc-area floor — see body overflow-x above. */
+  min-width: 360px;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── Responsive overlay mode ───────────────────────────────────────────
+ * Narrow windows (.app--overlay, set by App's ResizeObserver): panels stop
+ * pushing the doc and float over it as drawers. The doc (.app-main) keeps the
+ * full width underneath; a scrim dims it while a drawer is open. Closing the
+ * drawer (scrim click / Esc / the panel's own close button) reveals the doc.
+ */
+.app--overlay .sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 60;
+}
+
+.app--overlay .sidebar.open {
+  box-shadow: 2px 0 18px rgba(0, 0, 0, 0.22);
+  animation: ow-drawer-in-left 0.18s ease-out;
+}
+
+.app--overlay .right-rail-column {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+}
+
+.app--overlay .right-rail-column.open {
+  box-shadow: -2px 0 18px rgba(0, 0, 0, 0.22);
+  animation: ow-drawer-in-right 0.18s ease-out;
+}
+
+.ow-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 55;
+  background: rgba(0, 0, 0, 0.34);
+  animation: ow-scrim-in 0.18s ease-out;
+}
+
+@keyframes ow-drawer-in-left {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes ow-drawer-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes ow-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+
+/* ─── Scrollbar styling ─────────────────────────────────────────────── */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Chromium / Safari */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* ─── Connection banner ─────────────────────────────────────────────── */
+
+.connection-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: var(--bg-hover);
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-light);
+  font-family: var(--font-body);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.connection-banner-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--ink-light);
+  border-radius: 50%;
+  animation: sync-btn-spin 0.8s linear infinite;
+}
+
+.editor-container {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2rem 1rem;
+  min-width: 0;
+}
+
+/* Auto-accept status line — thin, unobtrusive header above the doc body. */
+.editor-auto-accept-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px;
+  margin: 0;
+  background: rgba(217, 119, 6, 0.08);
+  border-bottom: 1px solid rgba(217, 119, 6, 0.18);
+  color: #92400e;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.editor-auto-accept-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d97706;
+  animation: editor-auto-accept-pulse 2s ease-in-out infinite;
+}
+
+@keyframes editor-auto-accept-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* Reload banner — appears when the active doc was reloaded from disk
+ * after an external write. Persists until the user dismisses via the
+ * × button — auto-dismiss would be the system guessing whether the
+ * notification has been perceived.
+ * adr: adr/active-doc-watcher.md
+ */
+.editor-reload-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 6px 5px 14px;
+  margin: 0;
+  background: rgba(37, 99, 235, 0.08);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.2);
+  color: #1e40af;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  animation: editor-reload-fade-in 0.2s ease-out;
+}
+
+.editor-reload-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2563eb;
+  flex-shrink: 0;
+}
+
+.editor-reload-detail {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.editor-reload-tag {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.editor-reload-tag--orphan {
+  background: var(--color-pending-orphan-bg);
+  color: var(--color-pending-orphan);
+}
+
+.editor-reload-tag--stale {
+  background: var(--color-pending-stale-bg);
+  color: var(--color-pending-stale);
+}
+
+.editor-reload-dismiss {
+  margin-left: 4px;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.65;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.editor-reload-dismiss:hover,
+.editor-reload-dismiss:focus-visible {
+  opacity: 1;
+  background-color: rgba(37, 99, 235, 0.15);
+  outline: none;
+}
+
+.editor-reload-dismiss:focus-visible {
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.4);
+}
+
+/* When no tags are showing, the detail span isn't rendered — give the
+ * dismiss button an implicit margin-left:auto by selecting the case
+ * where it follows the title text directly. */
+.editor-reload-banner > span + .editor-reload-dismiss {
+  margin-left: auto;
+}
+
+@keyframes editor-reload-fade-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* When both banners are visible, the second one must not pull itself up
+ * onto the first via negative top margin. Auto-accept renders first in
+ * App.tsx, so the reload banner is the one to reset. The auto-accept's
+ * bottom margin also collapses so the two stack tightly as one cluster. */
+.editor-auto-accept-banner:has(+ .editor-reload-banner) {
+  margin-bottom: 0;
+  border-bottom-color: transparent;
+}
+.editor-auto-accept-banner + .editor-reload-banner {
+  margin-top: 0;
+}
+
+/* Dark mode adjustments — light text on the same accent tints */
+[data-mode="dark"] .editor-reload-banner {
+  background: rgba(96, 165, 250, 0.12);
+  border-bottom-color: rgba(96, 165, 250, 0.25);
+  color: #93c5fd;
+}
+
+[data-mode="dark"] .editor-reload-dot {
+  background: #60a5fa;
+}
+
+[data-mode="dark"] .editor-reload-dismiss:hover,
+[data-mode="dark"] .editor-reload-dismiss:focus-visible {
+  background-color: rgba(96, 165, 250, 0.18);
+}
+
+[data-mode="dark"] .editor-reload-dismiss:focus-visible {
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
+}
+
+/* Update nudge banner — appears when a newer version is published. Green
+ * accent to distinguish from the blue reload banner. Dismissable; dismissal
+ * persists until the next new version (see UpdateBanner.tsx). */
+.editor-update-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 6px 5px 14px;
+  margin: 0;
+  background: rgba(5, 150, 105, 0.08);
+  border-bottom: 1px solid rgba(5, 150, 105, 0.2);
+  color: #065f46;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  animation: editor-reload-fade-in 0.2s ease-out;
+}
+
+.editor-update-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #059669;
+  flex-shrink: 0;
+}
+
+.editor-update-cmd {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(5, 150, 105, 0.12);
+  user-select: all;
+}
+
+.editor-update-dismiss {
+  margin-left: auto;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.65;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.editor-update-dismiss:hover,
+.editor-update-dismiss:focus-visible {
+  opacity: 1;
+  background-color: rgba(5, 150, 105, 0.15);
+  outline: none;
+}
+
+.editor-update-dismiss:focus-visible {
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.4);
+}
+
+[data-mode="dark"] .editor-update-banner {
+  background: rgba(52, 211, 153, 0.12);
+  border-bottom-color: rgba(52, 211, 153, 0.25);
+  color: #6ee7b7;
+}
+
+[data-mode="dark"] .editor-update-dot {
+  background: #34d399;
+}
+
+[data-mode="dark"] .editor-update-cmd {
+  background: rgba(52, 211, 153, 0.18);
+}
+
+[data-mode="dark"] .editor-update-dismiss:hover,
+[data-mode="dark"] .editor-update-dismiss:focus-visible {
+  background-color: rgba(52, 211, 153, 0.18);
+}
+
+/* Review panel migrated into the right rail (v0.22). Its prior bottom-padding
+ * compensation is no longer needed since it's not a floating overlay anymore.
+ * adr: adr/right-rail.md */
+
+/* TipTap editor styles */
+.tiptap {
+  max-width: var(--editor-max-width);
+  margin: 0 auto;
+  padding: 0 1rem;
+  font-family: var(--editor-font);
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line-height);
+  letter-spacing: var(--editor-letter-spacing);
+  color: var(--editor-color);
+  outline: none;
+}
+
+.tiptap p {
+  margin-bottom: 1em;
+}
+
+.tiptap h1 {
+  font-family: var(--font-heading-h1);
+  font-size: var(--h1-size);
+  font-weight: var(--h1-weight);
+  letter-spacing: var(--h1-spacing);
+  line-height: var(--h1-line-height);
+  color: var(--h1-color);
+  font-style: var(--h1-style);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.tiptap h2 {
+  font-family: var(--font-heading-h2);
+  font-size: var(--h2-size);
+  font-weight: var(--h2-weight);
+  letter-spacing: var(--h2-spacing);
+  line-height: var(--h2-line-height);
+  color: var(--h2-color);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.tiptap h3 {
+  font-family: var(--font-heading-h3);
+  font-size: var(--h3-size);
+  font-weight: var(--h3-weight);
+  letter-spacing: var(--h3-spacing);
+  line-height: var(--h3-line-height);
+  color: var(--h3-color);
+  text-transform: var(--h3-transform);
+  border-bottom: var(--h3-border-width, 0) var(--h3-border-style, none) var(--h3-border-color, transparent);
+  padding-bottom: var(--h3-pb);
+  display: var(--h3-display);
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+}
+
+.tiptap h1:first-child,
+.tiptap h2:first-child,
+.tiptap h3:first-child {
+  margin-top: 0;
+}
+
+.tiptap ul,
+.tiptap ol {
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.tiptap li {
+  margin-bottom: 0.25em;
+}
+
+.tiptap blockquote {
+  border-left: var(--blockquote-border-width) solid var(--blockquote-border);
+  padding-left: 1em;
+  margin-left: 0;
+  margin-bottom: 1em;
+  color: var(--blockquote-color);
+  font-style: normal;
+  opacity: var(--blockquote-opacity);
+  font-size: var(--blockquote-font-size);
+}
+
+.tiptap code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.15em 0.3em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.tiptap pre {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1em;
+  border-radius: 6px;
+  margin-bottom: 1em;
+  overflow-x: auto;
+}
+
+.tiptap pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.tiptap hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+
+/* Placeholder */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Selection */
+.tiptap ::selection {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+/* ─── Sync button states ─────────────────────────────────────────────── */
+
+.sync-btn-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.sync-btn-state svg { flex-shrink: 0; }
+
+.sync-unconfigured { background: var(--bg-surface); color: var(--ink-dark); border-color: var(--border); }
+.sync-synced { background: var(--bg-surface); color: var(--color-pending-insert); border-color: var(--border); }
+.sync-pending { background: var(--bg-surface); color: var(--accent); border-color: var(--border); }
+.sync-syncing { background: var(--bg-surface); color: var(--ink-light); border-color: var(--border); opacity: 0.8; }
+.sync-error { background: var(--bg-surface); color: var(--color-pending-delete); border-color: var(--border); }
+
+.sync-btn-state:hover { background: var(--bg-hover); z-index: 1; }
+.sync-synced:hover { background: var(--bg-hover); }
+.sync-error:hover { background: var(--bg-hover); }
+
+.sync-btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--ink-light);
+  border-radius: 50%;
+  animation: sync-btn-spin 0.8s linear infinite;
+}
+
+@keyframes sync-btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Sync details dropdown ────────────────────────────────────────────── */
+
+.sync-btn-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.sync-details-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  border-radius: 0 6px 6px 0;
+  background: var(--bg-surface);
+  color: var(--ink-light);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  margin-left: -1px;
+}
+
+.sync-details-btn:hover {
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+  border-color: #cbd5e1;
+  z-index: 1;
+}
+
+.sync-btn-group .sync-btn-state:has(+ .sync-details-btn) {
+  border-radius: 6px 0 0 6px;
+}
+
+.sync-pending-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.sync-pending-header {
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sync-pending-loading {
+  padding: 20px 14px;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.sync-pending-list {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.sync-pending-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.sync-pending-item:last-child { border-bottom: none; }
+
+.sync-file-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.sync-file-added .sync-file-badge { background: #dcfce7; color: #16a34a; }
+.sync-file-modified .sync-file-badge { background: #dbeafe; color: #2563eb; }
+.sync-file-deleted .sync-file-badge { background: #fee2e2; color: #dc2626; }
+.sync-file-renamed .sync-file-badge { background: #fef3c7; color: #d97706; }
+
+.sync-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-dark);
+}
+
+/* ─── Shimmer loading effect ─────────────────────────────────────────────── */
+
+.node-blur-effect {
+  filter: blur(1.5px);
+  opacity: 1;
+  pointer-events: none;
+  transition: filter 0.3s ease, opacity 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.node-blur-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 250%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    var(--shimmer-highlight) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  animation: shimmer-paragraph-sweep 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer-paragraph-sweep {
+  0% { left: -150%; }
+  100% { left: 100%; }
+}
+
+/* ─── Insertion loading spinner (bouncing dots) ─────────────────────────── */
+
+.inline-insertion-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  vertical-align: middle;
+  height: 1em;
+  line-height: 1;
+}
+
+.inline-insertion-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1em;
+  line-height: 1;
+}
+
+.inline-insertion-spinner > div {
+  background-color: var(--color-primary, #5d4aec);
+  border-radius: 100%;
+  display: inline-block;
+  margin: 0 1px;
+  width: 6px;
+  height: 6px;
+  animation: sk-bouncedelay-subtle 1.4s infinite ease-in-out both;
+}
+
+.inline-insertion-spinner .bounce1 {
+  animation-delay: -0.32s;
+}
+
+.inline-insertion-spinner .bounce2 {
+  animation-delay: -0.16s;
+}
+
+@keyframes sk-bouncedelay-subtle {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(0.7); }
+}
+
+/* Hide placeholder text and suppress separator img height while spinner is visible */
+.has-insertion-loading [data-placeholder]::before,
+.has-insertion-loading p.is-empty::before {
+  display: none !important;
+  content: '' !important;
+}
+
+.has-insertion-loading img.ProseMirror-separator {
+  display: none !important;
+}
+
+/* ─── Image loading placeholder ─────────────────────────────────────────── */
+
+.image-loading-placeholder {
+  width: 100%;
+  height: 200px;
+  border-radius: 6px;
+  margin-top: 0.75em;
+  margin-bottom: 1em;
+  background: var(--bg-secondary, #1a1a1a);
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.image-loading-placeholder::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 250%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    var(--shimmer-highlight) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  animation: shimmer-paragraph-sweep 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.node-blur-selection {
+  filter: blur(1.5px);
+  display: inline;
+  background: linear-gradient(
+    90deg,
+    var(--ink-dark) 0%,
+    var(--ink-dark) 45%,
+    var(--shimmer-highlight) 50%,
+    var(--ink-dark) 55%,
+    var(--ink-dark) 100%
+  );
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: shimmer-text-flow 4.2s ease-in-out infinite;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background-attachment: fixed;
+  pointer-events: none;
+}
+
+@keyframes shimmer-text-flow {
+  0% { background-position: 110% 0; }
+  100% { background-position: -60% 0; }
+}
+
+/* Hide selection within shimmer */
+.node-blur-effect::selection,
+.node-blur-effect *::selection,
+.node-blur-selection::selection,
+.node-blur-selection *::selection {
+  background: transparent !important;
+}
+
+.ProseMirror:has(.node-blur-effect) ::selection,
+.ProseMirror:has(.node-blur-selection) ::selection {
+  background: rgba(0, 0, 0, 0.01) !important;
+}
+
+/* ─── Task list styles ─────────────────────────────────────────────── */
+
+.tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 1em;
+}
+
+.tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  margin-bottom: 0.25em;
+}
+
+.tiptap ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 0.2em;
+}
+
+.tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+.tiptap ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+.tiptap ul[data-type="taskList"] li[data-checked="true"] > div p {
+  text-decoration: line-through;
+  color: var(--ink-muted);
+}
+
+/* ─── Image styles ─────────────────────────────────────────────── */
+
+.tiptap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin-top: 0.75em;
+  margin-bottom: 1em;
+  display: block;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Syntax highlighting (lowlight) ─────────────────────────────── */
+
+.tiptap pre code .hljs-keyword { color: #569cd6; }
+.tiptap pre code .hljs-string { color: #ce9178; }
+.tiptap pre code .hljs-number { color: #b5cea8; }
+.tiptap pre code .hljs-comment { color: #6a9955; font-style: italic; }
+.tiptap pre code .hljs-function { color: #dcdcaa; }
+.tiptap pre code .hljs-title { color: #dcdcaa; }
+.tiptap pre code .hljs-params { color: #9cdcfe; }
+.tiptap pre code .hljs-built_in { color: #4ec9b0; }
+.tiptap pre code .hljs-type { color: #4ec9b0; }
+.tiptap pre code .hljs-attr { color: #9cdcfe; }
+.tiptap pre code .hljs-variable { color: #9cdcfe; }
+.tiptap pre code .hljs-selector-class { color: #d7ba7d; }
+.tiptap pre code .hljs-selector-tag { color: #569cd6; }
+.tiptap pre code .hljs-tag { color: #569cd6; }
+.tiptap pre code .hljs-name { color: #569cd6; }
+.tiptap pre code .hljs-attribute { color: #9cdcfe; }
+.tiptap pre code .hljs-literal { color: #569cd6; }
+.tiptap pre code .hljs-meta { color: #569cd6; }
+.tiptap pre code .hljs-regexp { color: #d16969; }
+.tiptap pre code .hljs-symbol { color: #b5cea8; }
+
+
+/* writer-app surfaces */
+/* ─── Save-status chip ─── */
+
+.titlebar-save {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  line-height: 1;
+  margin-left: 8px;
+  user-select: none;
+}
+
+.titlebar-save--idle {
+  color: var(--ink-muted);
+}
+
+.titlebar-save--saving {
+  color: var(--accent);
+}
+
+.titlebar-save--saved {
+  color: var(--ink-light);
+}
+
+
+/* ─── Chat tab ───────────────────────────────────────────────────────── */
+
+.chat-tab {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  gap: 12px;
+}
+
+.chat-tab__header {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.chat-tab__header-btn {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--ink-dark);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.chat-tab__header-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: #cbd5e1;
+}
+
+.chat-tab__auto-accept {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-body);
+  cursor: pointer;
+  user-select: none;
+}
+
+.chat-tab__auto-accept input {
+  accent-color: var(--accent);
+  margin: 0;
+}
+
+.chat-tab__header-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chat-tab__header-btn--secondary {
+  margin-left: auto;
+  background: transparent;
+}
+
+.chat-tab__messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-tab__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.chat-tab__message {
+  display: flex;
+  width: 100%;
+}
+
+.chat-tab__message--writer {
+  justify-content: flex-end;
+}
+
+.chat-tab__message--assistant {
+  justify-content: flex-start;
+}
+
+.chat-tab__message--system {
+  justify-content: center;
+}
+
+.chat-tab__bubble {
+  max-width: 88%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.chat-tab__bubble--writer {
+  background: var(--accent);
+  color: white;
+  border-bottom-right-radius: 3px;
+}
+
+.chat-tab__bubble--assistant {
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 3px;
+}
+
+.chat-tab__bubble--system {
+  background: rgba(220, 38, 38, 0.07);
+  color: #991b1b;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.chat-tab__meta {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-bottom: 3px;
+}
+
+.chat-tab__text {
+  word-break: break-word;
+}
+
+.chat-tab__tool-call {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  align-self: center;
+}
+
+.chat-tab__tool-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  flex-shrink: 0;
+}
+
+.chat-tab__tool-dot--error {
+  background: #ef4444;
+}
+
+.chat-tab__ended {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+  font-size: 11px;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chat-tab__ended-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.chat-tab__ended-text {
+  flex-shrink: 0;
+}
+
+.chat-tab__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+  align-self: flex-start;
+}
+
+.chat-tab__progress-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-light);
+}
+
+.chat-tab__progress-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: chat-progress-pulse 1.4s infinite ease-in-out both;
+}
+
+@keyframes chat-progress-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.chat-tab__composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.chat-tab__input {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--ink-dark);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.chat-tab__input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(93, 74, 236, 0.12);
+}
+
+.chat-tab__input:disabled {
+  opacity: 0.6;
+  background: var(--bg-hover);
+  cursor: not-allowed;
+}
+
+.chat-tab__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.chat-tab__send-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.12s ease, background 0.12s ease;
+}
+
+.chat-tab__send-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.chat-tab__send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chat-tab__send-btn--stop {
+  background: #ef4444;
+}
+
+.chat-tab__composer-error {
+  font-size: 12px;
+  color: #991b1b;
+  background: rgba(220, 38, 38, 0.07);
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+/* Dark mode adjustments */
+[data-mode="dark"] .chat-tab__bubble--assistant {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-mode="dark"] .chat-tab__bubble--system,
+[data-mode="dark"] .chat-tab__composer-error {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.22);
+  color: #fca5a5;
+}
+
+[data-mode="dark"] .chat-tab__input {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-mode="dark"] .chat-tab__input:disabled {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Header toggle carries the thread name — spec: truncated. Long names
+   ellipsize instead of blowing out the narrow rail. */
+.chat-tab__header-btn--secondary {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Picker-open state: the toggle reads "Back to chat" — compact like its
+   New chat neighbour. After the rule above so it wins the flex contest. */
+.chat-tab__header-btn--compact {
+  flex: 0 0 auto;
+}
+
+.chat-picker {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-picker__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.chat-picker__label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-dark);
+}
+
+.chat-picker__list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-picker__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  cursor: pointer;
+}
+
+.chat-picker__row:hover {
+  background: var(--bg-hover);
+}
+
+.chat-picker__row--current {
+  border-color: var(--accent);
+}
+
+.chat-picker__title {
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  color: var(--ink-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.chat-picker__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.chat-picker__ended {
+  font-family: var(--font-body);
+  font-size: 10px;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--ink-body);
+}
+
+.chat-picker__age {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-body);
+}
+
+.chat-picker__rename-btn {
+  opacity: 0;
+  border: none;
+  background: transparent;
+  padding: 0 2px;
+  color: var(--ink-body);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.chat-picker__row:hover .chat-picker__rename-btn,
+.chat-picker__rename-btn:focus-visible {
+  opacity: 1;
+}
+
+.chat-picker__rename {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  padding: 2px 4px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--bg-surface);
+  color: var(--ink-dark);
+}
+
+/* ─── Review-tab physician-gate banner (M4c) ─────────────────────────── */
+.review-tab__gate {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 8px;
+  font-size: 12px;
+}
+.review-tab__gate[data-phase='returned'],
+.review-tab__gate[data-phase='conflict'] {
+  border-color: #b3591f;
+}
+.review-tab__gate-title {
+  font-weight: 600;
+}
+.review-tab__gate-note {
+  white-space: pre-wrap;
+  margin: 6px 0 0;
+  font-size: 11px;
+  font-family: inherit;
+}
+/* Review-tab submit (human path to the approval loop) */
+.review-tab__submit {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.review-tab__submit-note {
+  font-size: 12px;
+  color: var(--ink-body);
+}
+.review-tab__submit-btn {
+  padding: 7px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.review-tab__submit-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.review-tab__submit-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Chat-tab selection quote (writer's editor selection attached to the next message) */
+.chat-tab__quote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  background: var(--bg-hover);
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+.chat-tab__quote-label {
+  color: var(--ink-light);
+  flex-shrink: 0;
+}
+.chat-tab__quote-text {
+  color: var(--ink-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.chat-tab__quote-clear {
+  border: 0;
+  background: none;
+  color: var(--ink-light);
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.chat-tab__quote-clear:hover {
+  color: var(--ink-dark);
+}
+
+/* Submit gate — confirmation that submitting is not saving. The checkbox is
+ * the writer's acknowledgment that the article is done (M4e UAT review). */
+.submit-gate {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 17, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.submit-gate__card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  padding: 20px 22px;
+  width: min(420px, calc(100vw - 48px));
+}
+.submit-gate__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-dark);
+  margin-bottom: 10px;
+}
+.submit-gate__body {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-body);
+  margin: 0 0 14px;
+}
+.submit-gate__ack {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ink-dark);
+  cursor: pointer;
+  padding: 10px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  background: var(--bg-hover);
+}
+.submit-gate__ack input {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.submit-gate__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+.submit-gate__btn {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 7px 14px;
+  font-size: 13.5px;
+  cursor: pointer;
+  background: var(--bg-primary);
+  color: var(--ink-dark);
+}
+.submit-gate__btn--cancel:hover {
+  background: var(--bg-hover);
+}
+.submit-gate__btn--confirm {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.submit-gate__btn--confirm:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.submit-gate__btn--confirm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

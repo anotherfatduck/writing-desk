@@ -1,0 +1,42 @@
+[Unit]
+Description=content-repo git orchestrator (M4a) — submit-boundary commits to Gitea
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=writing-desk-orch
+Group=writing-desk-orch
+Environment=ORCH_CONFIG=/etc/writing-desk/orchestrator.config.json
+# Node's bundled CA roots don't carry the org CA, so the Gitea REST client's
+# fetch dies with UNABLE_TO_GET_ISSUER_CERT_LOCALLY (git and curl read the
+# system store; Node doesn't). Add the system bundle — NODE_EXTRA_CA_CERTS
+# extends the bundled roots, so hosts without the org CA are unaffected.
+Environment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+# The service user's passwd home is /nonexistent (nologin hardening) — tea and
+# git need a real, writable config home; this dir is in ReadWritePaths.
+Environment=HOME=/srv/writer-app/orchestrator
+# Run with the WRITER's group as primary (usermod -aG in postinst keeps it a
+# member): everything the orchestrator writes into the workspace tree (review
+# stamps, merge-backs — ADR-0007) lands in the shared group, and UMask=0002
+# keeps it group-writable for the writer's own slots.
+Group=writing-desk
+UMask=0002
+# Infra-owned per-host contract (the infra renders one per host; dash = optional —
+# a host missing the other host's file must not fail the unit).
+EnvironmentFile=-/etc/writer-host-01/writer.env
+EnvironmentFile=-/etc/writer-host-02/writer.env
+# App-owned non-secret env (read last, so it wins ties)
+EnvironmentFile=/etc/writing-desk/app.env
+ExecStart=/usr/bin/node /opt/writing-desk/dist-orchestrator/bin/orchestrator.js
+Restart=on-failure
+RestartSec=5
+# Hardening: no shell, no model access; read-only everywhere except the
+# orchestrator root and the configured workspace roots (merge-back writes there).
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/srv/writer-app/orchestrator /srv/writer-app/workspaces
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

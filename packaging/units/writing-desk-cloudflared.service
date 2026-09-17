@@ -1,0 +1,19 @@
+[Unit]
+Description=content-repo cloudflared tunnel (M4d rider) — outbound-only edge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=writing-desk
+EnvironmentFile=-/etc/writer-host-01/cloudflared.env
+ExecStart=/usr/bin/cloudflared --no-autoupdate tunnel run --token ${TUNNEL_TOKEN}
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

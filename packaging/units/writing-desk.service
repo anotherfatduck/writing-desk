@@ -1,0 +1,41 @@
+[Unit]
+Description=writing-desk front door (M4d) — auth, store, per-user editor slots
+After=network-online.target
+After=stunnel.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=writing-desk
+Group=writing-desk
+Environment=OW_PORT=5051
+# F1 (2026-09-13): the service user's passwd home is /nonexistent, so slots
+# inherited a nonexistent homedir and trash()'s linux resolver — which does
+# lstat(os.homedir()) unconditionally — ENOENT'd on EVERY delete. Pin HOME +
+# XDG_DATA_HOME to the state dir (already in ReadWritePaths below): the XDG
+# home trash resolves to /var/lib/writing-desk/.local/share/Trash,
+# self-created by trash@10.1.0 at first use. The orchestrator unit stays
+# HOME-less by design (creds from settings.enc, explicit git identity).
+Environment=HOME=/var/lib/writing-desk
+Environment=XDG_DATA_HOME=/var/lib/writing-desk/.local/share
+
+# Group-writable content (664/775): the orchestrator shares this group and
+# stamps review state into workspace articles (ADR-0007) / merge-backs.
+UMask=0002
+# Infra-owned per-host contract (the infra renders one per host; dash = optional —
+# a host missing the other host's file must not fail the unit).
+EnvironmentFile=-/etc/writer-host-01/writer.env
+EnvironmentFile=-/etc/writer-host-02/writer.env
+# App-owned non-secret env (read last, so it wins ties)
+EnvironmentFile=/etc/writing-desk/app.env
+ExecStart=/usr/bin/node /opt/writing-desk/dist/bin/front-door.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/srv/writer-app/workspaces /var/lib/writing-desk /etc/writing-desk/runtime
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

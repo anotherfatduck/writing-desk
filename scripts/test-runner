@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# test-runner — writer-app's real runner (replaced the kit stub).
+# Gates: tests/test-*.sh + tests/golden/test-*.mjs + tests/conductor/test-*.mjs + tests/orchestrator/test-*.mjs
+# + tests/share/test-*.mjs pass/fail, then the regression contract via scripts/regression-gate.sh.
+# tests/spike-a is diagnostic — its seam smoke (test-seam-smoke.mjs) IS gated here
+# because it has no known-fail baseline; the conflict simulations are not (they
+# document the known Scenario A gap).
+set -euo pipefail
+TESTS_DIR="${TESTS_DIR:-$(git rev-parse --show-toplevel)/tests}"
+shopt -s nullglob
+sh_tests=( "$TESTS_DIR"/test-*.sh )
+golden=( "$TESTS_DIR"/golden/test-*.mjs )
+conductor=( "$TESTS_DIR"/conductor/test-*.mjs )
+orchestrator=( "$TESTS_DIR"/orchestrator/test-*.mjs )
+packaging=( "$TESTS_DIR"/packaging/test-*.mjs )
+share=( "$TESTS_DIR"/share/test-*.mjs )
+shopt -u nullglob
+if [ "${#sh_tests[@]}" -eq 0 ] && [ "${#golden[@]}" -eq 0 ] && [ "${#conductor[@]}" -eq 0 ] && [ "${#orchestrator[@]}" -eq 0 ] && [ "${#packaging[@]}" -eq 0 ] && [ "${#share[@]}" -eq 0 ]; then
+  echo "test-runner: no tests found (tests/test-*.sh, tests/golden/test-*.mjs, tests/conductor/test-*.mjs, tests/orchestrator/test-*.mjs, tests/packaging/test-*.mjs, tests/share/test-*.mjs)" >&2
+  exit 1
+fi
+fail=0
+for t in "${sh_tests[@]}"; do bash "$t" || { echo "test-runner: FAIL $t" >&2; fail=1; }; done
+for t in "${golden[@]}"; do env -u OW_HOME node "$t" || { echo "test-runner: FAIL $t" >&2; fail=1; }; done
+for t in "${conductor[@]}"; do env -u OW_HOME node "$t" || { echo "test-runner: FAIL $t" >&2; fail=1; }; done
+for t in "${orchestrator[@]}"; do env -u OW_HOME node "$t" || { echo "test-runner: FAIL $t" >&2; fail=1; }; done
+for t in "${packaging[@]}"; do env -u OW_HOME node "$t" || { echo "test-runner: FAIL $t" >&2; fail=1; }; done
+for t in "${share[@]}"; do env -u OW_HOME node "$t" || { echo "test-runner: FAIL $t" >&2; fail=1; }; done
+bash scripts/regression-gate.sh || fail=1
+env -u OW_HOME node "$TESTS_DIR/spike-a/test-seam-smoke.mjs" || { echo "test-runner: FAIL seam-smoke" >&2; fail=1; }
+exit $fail

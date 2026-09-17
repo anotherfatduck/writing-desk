@@ -1,0 +1,104 @@
+#!/bin/bash
+# writing-desk postinst — idempotent self-enable + shared group/runtime/store.
+# Every action is guarded; failures exit non-zero so dpkg aborts loudly.
+# WRITER_DRY_RUN=1 prints the action sequence without running it (tested).
+set -euo pipefail
+
+DRY_RUN="${WRITER_DRY_RUN:-0}"
+run() {
+  if [ "$DRY_RUN" = "1" ]; then echo "[postinst:dry] $*"; else "$@"; fi
+}
+die() { echo "writing-desk postinst: $*" >&2; exit 1; }
+
+# 1. Service users (idempotent).
+for u in writing-desk writing-desk-orch; do
+  if ! getent passwd "$u" >/dev/null; then
+    run useradd --system --shell /usr/sbin/nologin --home-dir /nonexistent "$u"
+  else
+    run getent passwd "$u"
+  fi
+done
+
+# 2. State-tree ownership (the M4b claim; infra's placeholder/ is untouched).
+run install -d -o writing-desk -g writing-desk -m 0750 /srv/writer-app/workspaces
+run install -d -o writing-desk-orch -g writing-desk-orch -m 0750 /srv/writer-app/orchestrator
+
+# 2b. Shared app group for store/runtime: setgid so files the app writes inherit
+#     the group, and the orchestrator user joins it to read the store + key.
+run install -d -o writing-desk -g writing-desk -m 2750 /etc/writing-desk/runtime
+run install -d -o writing-desk -g writing-desk -m 2750 /var/lib/writing-desk
+# 2b+. XDG home-trash parent (F1 2026-09-13): the writer unit pins
+#      HOME/XDG_DATA_HOME into /var/lib/writing-desk so trash() resolves a
+#      real freedesktop trash. trash@10.1.0 self-creates files/+info/ at first
+#      use (0700); the parent is created deterministically here.
+run install -d -o writing-desk -g writing-desk -m 0700 /var/lib/writing-desk/.local/share
+run usermod -aG writing-desk writing-desk-orch
+
+# 2d. Workspace tree group-write (M4e): the orchestrator (shared group, primary
+#     in its unit) stamps review state into workspace articles and merge-backs
+#     (ADR-0007). Content written before UMask=0002 landed is writer-writable
+#     only — grant the group write on the existing tree (idempotent; new
+#     content inherits 0002 from the units).
+if [ -d /srv/writer-app/workspaces ]; then
+  run chmod -R g+rwX /srv/writer-app/workspaces
+fi
+
+# 2c. Orchestrator conffile: service-user readable via shared group (dpkg stages
+#     conffiles root:root 0644; the orchestrator process must read this — it is
+#     non-secret, creds live in the encrypted store).
+run chown root:writing-desk /etc/writing-desk/orchestrator.config.json
+run chmod 0640 /etc/writing-desk/orchestrator.config.json
+
+# 2c+. App-owned env conffile: service-user readable (non-secret route config;
+#      secrets live in the encrypted store — ADR-0009). Same pattern as 2c.
+run chown root:writing-desk /etc/writing-desk/app.env
+run chmod 0640 /etc/writing-desk/app.env
+
+# 3. nginx claim: render the managed block from the INSTALLED upstream conffile
+#    (single source — ops edits and package upgrades follow it), splice it into
+#    the default_server vhost; validate + reload only when the block changed.
+VHOST="$(grep -Rl 'default_server' /etc/nginx/sites-enabled/ 2>/dev/null | head -n1 || true)"
+BACKUP_DIR="/var/backups/writing-desk"
+if [ "$DRY_RUN" = "1" ]; then
+  echo "[postinst:dry] node /opt/writing-desk/lib/render.mjs /etc/writing-desk/upstream > <block> && node /opt/writing-desk/lib/nginx-splice.mjs ${VHOST:-<none-found>} <block>"
+  echo "[postinst:dry] install -d -m 0700 $BACKUP_DIR"
+  echo "[postinst:dry] cp -f ${VHOST:-<none-found>} $BACKUP_DIR/${VHOST:-<none-found>}.pre-content-repo"
+  echo "[postinst:dry] nginx -t"
+  echo "[postinst:dry] systemctl reload nginx"
+else
+  [ -n "$VHOST" ] || die "no default_server vhost under /etc/nginx/sites-enabled/ — refusing to guess"
+  run install -d -m 0700 "$BACKUP_DIR"
+  BACKUP="$BACKUP_DIR/$(basename "$VHOST").pre-content-repo"
+  BLOCK="$(mktemp /tmp/content-repo-block.XXXXXX)"
+  node /opt/writing-desk/lib/render.mjs /etc/writing-desk/upstream > "$BLOCK"
+  cp -f "$VHOST" "$BACKUP"
+  SPLICE_OUT="$(node /opt/writing-desk/lib/nginx-splice.mjs "$VHOST" "$BLOCK")"
+  rm -f "$BLOCK"
+  if echo "$SPLICE_OUT" | grep -q 'no change'; then
+    echo "postinst: nginx claim unchanged — no reload"
+    rm -f "$BACKUP"
+  else
+    nginx -t || { cp -f "$BACKUP" "$VHOST"; rm -f "$BACKUP"; die "nginx -t failed after the writing-desk claim"; }
+    rm -f "$BACKUP"
+    systemctl reload nginx
+  fi
+fi
+
+# 4. Self-enable (M4d): the app boots to 'not configured' — first visit to the
+#    URL serves the init wizard (M4e: no setup token; first claim wins). The
+#    orchestrator idles 'not configured' until init. Idempotent.
+#    enable + restart (not the --now form): an upgrade must also swap the
+#    running processes to the new payload — --now is a no-op on a running
+#    unit, which left stale code serving after a reinstall. restart starts
+#    inactive units too, so first-install and upgrade are the same path.
+run systemctl daemon-reload
+run systemctl enable writing-desk.service writing-desk-orchestrator.service
+run systemctl restart writing-desk.service writing-desk-orchestrator.service
+# 5. Edge rider: enabled only when infra provisioned a NON-EMPTY tunnel token —
+#    an empty placeholder file would enable a unit that can't run.
+if [ -f /etc/writer-host-01/cloudflared.env ] && grep -q '^TUNNEL_TOKEN=.\+' /etc/writer-host-01/cloudflared.env; then
+  run systemctl enable writing-desk-cloudflared.service
+  run systemctl restart writing-desk-cloudflared.service
+fi
+
+echo "writing-desk installed. Edge rider is enabled only when /etc/writer-host-01/cloudflared.env contains a non-empty TUNNEL_TOKEN."

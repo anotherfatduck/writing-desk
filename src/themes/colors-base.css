@@ -1,0 +1,138 @@
+/* colors-base.css — Light + Dark mode variables */
+
+/* ─── Light mode (default) ─── */
+/* Borders are calibrated to stay visible on washed-out TN panels (~400 nits):
+ * #e0e0e0-class lines vanish there, so structural borders sit at #c9c9c9 and
+ * even decorative ones at #d6d6d6 (M4e UAT review: "the bar should be visibility
+ * EVEN on a TN panel"). */
+:root {
+  --bg-primary: #fff;
+  --bg-sidebar: #f2f1ef;
+  --bg-titlebar: #f7f6f4;
+  --bg-surface: #fff;
+  --bg-hover: #e9e8e5;
+  --border: #c9c9c9;
+  --border-light: #d6d6d6;
+  --ink-dark: #111;
+  --ink-body: #6a6a6a;
+  --ink-light: #777;
+  --accent: #5b7a9d;
+  --editor-color: #242424;
+  --h1-color: #111;
+  --h2-color: #111;
+  --h3-color: #333;
+  --strong-color: #111;
+  --blockquote-border: #d0d0d0;
+  --blockquote-color: #666;
+  --h3-border-color: transparent;
+  --shimmer-highlight: rgba(255, 255, 255, 0.7);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.35);
+  --scrollbar-track: transparent;
+  --color-pending-insert: #16a34a;
+  --color-pending-insert-bg: rgba(22, 163, 74, 0.1);
+  --color-pending-insert-border: #16a34a;
+  --color-pending-rewrite: #2563eb;
+  --color-pending-rewrite-bg: rgba(37, 99, 235, 0.1);
+  --color-pending-rewrite-border: #2563eb;
+  --color-pending-delete: #e74c3c;
+  --color-pending-delete-bg: rgba(231, 76, 60, 0.1);
+  --color-pending-delete-border: #e74c3c;
+  --color-pending-focus: #2563eb;
+  /* Orphan: agent's anchor disappeared (target was deleted externally or
+   * by a sibling pending). Pending entry is preserved as an insert at end
+   * of doc so creative content isn't lost. Purple distinguishes it from
+   * a normal insert (green). */
+  --color-pending-orphan: #9333ea;
+  --color-pending-orphan-bg: rgba(147, 51, 234, 0.1);
+  --color-pending-orphan-border: #9333ea;
+  /* Stale-baseline: agent's rewrite was proposed against content that has
+   * since drifted (external edit, restore_version). Pending still applies
+   * but flagged for user review. Amber/yellow signals "look here." */
+  --color-pending-stale: #d97706;
+  --color-pending-stale-bg: rgba(217, 119, 6, 0.12);
+  --color-pending-stale-border: #d97706;
+
+  /* --- Typography defaults --- */
+  --font-body: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sidebar: Inter, -apple-system, sans-serif;
+  --editor-font: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, serif;
+  --editor-font-size: 18px;
+  --editor-line-height: 1.75;
+  --editor-letter-spacing: -0.003em;
+  --editor-max-width: 680px;
+  --font-heading-h1: Inter, -apple-system, sans-serif;
+  --font-heading-h2: Inter, -apple-system, sans-serif;
+  --font-heading-h3: Inter, -apple-system, sans-serif;
+  --h1-size: 32px;
+  --h1-weight: 700;
+  --h1-spacing: -0.8px;
+  --h1-line-height: 1.15;
+  --h1-style: normal;
+  --h2-size: 24px;
+  --h2-weight: 700;
+  --h2-spacing: -0.5px;
+  --h2-line-height: 1.2;
+  --h3-size: 18px;
+  --h3-weight: 600;
+  --h3-spacing: -0.3px;
+  --h3-line-height: 1.4;
+  --h3-transform: none;
+  --h3-border-width: 0;
+  --h3-border-style: none;
+  --h3-pb: 0;
+  --h3-display: block;
+  --blockquote-opacity: 0.8;
+  --blockquote-font-size: inherit;
+  --blockquote-border-width: 3px;
+  --link-color: #2563eb;
+  --link-hover: #1d4ed8;
+  --link-visited: #7c3aed;
+}
+
+/* ─── Dark mode ─── */
+[data-mode="dark"] {
+  --accent: #7d9bba;
+  --bg-primary: #1a1a1a;
+  --bg-sidebar: #181818;
+  --bg-titlebar: #1f1f1f;
+  --bg-surface: #1f1f1f;
+  --bg-hover: #262626;
+  --border: #2a2a2a;
+  --border-light: #262626;
+  --ink-dark: #e0e0e0;
+  --ink-body: #909090;
+  --ink-light: #666;
+  --editor-color: #bfbfbf;
+  --h1-color: #f0f0f0;
+  --h2-color: #f0f0f0;
+  --h3-color: #ccc;
+  --strong-color: #fff;
+  --blockquote-border: #555;
+  --blockquote-color: #999;
+  --blockquote-opacity: 0.9;
+  --shimmer-highlight: rgba(255, 255, 255, 0.08);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
+  --scrollbar-track: transparent;
+  --color-pending-insert: #22c55e;
+  --color-pending-insert-bg: rgba(34, 197, 94, 0.1);
+  --color-pending-insert-border: #22c55e;
+  --color-pending-rewrite: #60a5fa;
+  --color-pending-rewrite-bg: rgba(96, 165, 250, 0.1);
+  --color-pending-rewrite-border: #60a5fa;
+  --color-pending-delete: #f87171;
+  --color-pending-delete-bg: rgba(248, 113, 113, 0.1);
+  --color-pending-delete-border: #f87171;
+  --color-pending-focus: #60a5fa;
+  /* Orphan + stale-baseline dark variants (see light-mode comments above) */
+  --color-pending-orphan: #c084fc;
+  --color-pending-orphan-bg: rgba(192, 132, 252, 0.12);
+  --color-pending-orphan-border: #c084fc;
+  --color-pending-stale: #fbbf24;
+  --color-pending-stale-bg: rgba(251, 191, 36, 0.12);
+  --color-pending-stale-border: #fbbf24;
+  --link-color: #60a5fa;
+  --link-hover: #93c5fd;
+  --link-visited: #a78bfa;
+}

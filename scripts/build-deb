@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# scripts/build-deb — off-host .deb build (ADR-0001: immutable, versioned,
+# dpkg is the idempotency engine). Builds server + client + orchestrator,
+# gates the full test suite, stages the payload, validates the manifest,
+# emits artifacts/deb/writing-desk_<version>_all.deb.
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+VERSION="$(node -e 'process.stdout.write(require("./package.json").version)')"
+STAGE="$(mktemp -d /tmp/content-repo-deb.XXXXXX)"
+trap 'rm -rf "$STAGE"' EXIT
+OUT="$ROOT/artifacts/deb"
+mkdir -p "$OUT"
+
+echo "== build-deb: dependencies + builds"
+npm ci --no-audit --no-fund
+npm run build
+npm run build:orchestrator
+
+echo "== build-deb: test gates (both suites, ADR-0003 baseline parity)"
+npm test
+
+echo "== build-deb: staging"
+mkdir -p "$STAGE/DEBIAN" "$STAGE/opt/writing-desk/lib" "$STAGE/etc/writing-desk" \
+         "$STAGE/etc/nginx/conf.d" "$STAGE/usr/lib/systemd/system" \
+         "$STAGE/usr/lib/writing-desk/templates" "$STAGE/var/lib/writing-desk"
+cp -r dist "$STAGE/opt/writing-desk/dist"
+cp -r dist-orchestrator "$STAGE/opt/writing-desk/dist-orchestrator"
+cp packaging/lib/render.mjs packaging/lib/nginx-splice.mjs "$STAGE/opt/writing-desk/lib/"
+cp packaging/nginx-map.conf "$STAGE/etc/nginx/conf.d/writing-desk-map.conf"
+cp packaging/units/writing-desk.service packaging/units/writing-desk-orchestrator.service packaging/units/writing-desk-cloudflared.service "$STAGE/usr/lib/systemd/system/"
+cp packaging/templates/writer.env.example "$STAGE/usr/lib/writing-desk/templates/"
+cp packaging/orchestrator.config.json "$STAGE/etc/writing-desk/orchestrator.config.json"
+cp packaging/app.env "$STAGE/etc/writing-desk/app.env"
+cp packaging/upstream "$STAGE/etc/writing-desk/upstream"
+cp packaging/control "$STAGE/DEBIAN/control"
+sed -i "s/^Version: __VERSION__$/Version: ${VERSION}/" "$STAGE/DEBIAN/control"
+cp packaging/postinst "$STAGE/DEBIAN/postinst"
+chmod 755 "$STAGE/DEBIAN/postinst"
+cp packaging/conffiles "$STAGE/DEBIAN/conffiles"
+grep -q '^artifacts/$' .gitignore || echo 'artifacts/' >> .gitignore
+
+echo "== build-deb: vendoring production node_modules"
+cp package.json package-lock.json "$STAGE/opt/writing-desk/"
+(cd "$STAGE/opt/writing-desk" && npm ci --omit=dev --no-audit --no-fund)
+
+echo "== build-deb: manifest validation"
+node packaging/lib/validate-manifest.mjs "$STAGE"
+
+echo "== build-deb: dpkg-deb"
+dpkg-deb --build --root-owner-group "$STAGE" "$OUT/writing-desk_${VERSION}_all.deb"
+echo "built: $OUT/writing-desk_${VERSION}_all.deb"

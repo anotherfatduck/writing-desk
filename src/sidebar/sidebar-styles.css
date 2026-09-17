@@ -1,0 +1,190 @@
+/* ==========================================================================
+   SIDEBAR VISUAL STYLES — applied via [data-sidebar-style] on <html>
+   Purely STRUCTURAL overlays — all colors come from the active theme.
+   ========================================================================== */
+
+/* ---------- CARDS ---------- */
+/* Each document becomes a distinct card with border + shadow */
+
+[data-sidebar-style="cards"] .sidebar-section-header {
+  border-left: none;
+  padding: 10px 12px 6px;
+}
+
+[data-sidebar-style="cards"] .sidebar-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+[data-sidebar-style="cards"] .sidebar-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+[data-sidebar-style="cards"] .sidebar-item:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-sidebar-style="cards"] .sidebar-item.active {
+  border-color: var(--accent);
+  background: rgba(37, 99, 235, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+[data-sidebar-style="cards"] .sidebar-item-meta {
+  margin-top: 3px;
+}
+
+[data-sidebar-style="cards"] .sidebar-tag {
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+[data-sidebar-style="cards"] .sidebar-new-btn {
+  background: var(--bg-surface);
+}
+
+/* Cards — sections: outlined rounded regions */
+[data-sidebar-style="cards"] .sidebar-section {
+  border-bottom: none;
+}
+
+[data-sidebar-style="cards"] .sidebar-workspace-section,
+[data-sidebar-style="cards"] .sidebar-docs-section {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+  padding-bottom: 4px;
+}
+
+[data-sidebar-style="cards"] .sidebar-workspace-section:last-child,
+[data-sidebar-style="cards"] .sidebar-docs-section:last-child {
+  border-bottom: none;
+}
+
+[data-sidebar-style="cards"] .sidebar-new-workspace {
+  border-top: none;
+}
+
+[data-sidebar-style="cards"] .sidebar-section-header:hover {
+  background: transparent;
+}
+
+[data-sidebar-style="cards"] .sidebar-section-header .sidebar-label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  color: var(--ink-dark);
+}
+
+[data-sidebar-style="cards"] .sidebar-workspace-section > .sidebar-section-list,
+[data-sidebar-style="cards"] .sidebar-docs-section > .sidebar-section-list {
+  padding: 4px 8px 8px;
+}
+
+/* Cards — chevron: larger, more visible */
+[data-sidebar-style="cards"] .sidebar-chevron {
+  font-size: 14px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--ink-light);
+  transition: background 0.1s ease, transform 0.15s ease;
+}
+
+[data-sidebar-style="cards"] .sidebar-section-header:hover .sidebar-chevron,
+[data-sidebar-style="cards"] .sidebar-container-header:hover .sidebar-chevron {
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+}
+
+/* Cards — container: full-width bordered block */
+[data-sidebar-style="cards"] .sidebar-container {
+  border: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  border-radius: 8px;
+  margin-left: 0;
+  margin-bottom: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: none;
+}
+
+[data-sidebar-style="cards"] .sidebar-container.collapsed {
+  border-left: 1px solid var(--border);
+}
+
+[data-sidebar-style="cards"] .sidebar-container.depth-0,
+[data-sidebar-style="cards"] .sidebar-container.depth-1,
+[data-sidebar-style="cards"] .sidebar-container.depth-2 {
+  margin-left: 0;
+}
+
+[data-sidebar-style="cards"] .sidebar-container-header {
+  display: flex;
+  padding: 8px 10px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  border-radius: 0;
+  gap: 5px;
+}
+
+[data-sidebar-style="cards"] .sidebar-container-header:hover {
+  background: transparent;
+}
+
+[data-sidebar-style="cards"] .sidebar-container-list {
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 0 6px 6px;
+  margin: 0;
+}
+
+/* Cards — collapsed container */
+[data-sidebar-style="cards"] .sidebar-container.collapsed .sidebar-container-header {
+  border: none;
+  border-radius: 0;
+  margin-bottom: 0;
+}
+
+/* Cards — timeline, board modes */
+[data-sidebar-style="cards"] .tl-item {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  margin-bottom: 4px;
+}
+
+[data-sidebar-style="cards"] .tl-item:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.07);
+}
+
+[data-sidebar-style="cards"] .tl-item.active {
+  border-color: var(--accent);
+}
+
+[data-sidebar-style="cards"] .board-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-sidebar-style="cards"] .board-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+[data-sidebar-style="cards"] .board-card.active {
+  border-color: var(--accent);
+}

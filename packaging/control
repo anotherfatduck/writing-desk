@@ -1,0 +1,13 @@
+Package: writing-desk
+Version: __VERSION__
+Section: web
+Priority: optional
+Architecture: all
+Depends: nodejs (>= 22)
+Maintainer: Writing Desk ops <ops@writing-desk.example>
+Description: Writing Desk writer app + git orchestrator (writer-app M4d)
+ Thin hosted writing surface (editor + review overlay + chat conductor)
+ with the host-side git orchestrator, packaged per ADR-0001: immutable
+ versioned artifact, dpkg as the idempotency engine, rollback = install
+ the previous version. Code lives under /opt/writing-desk (dpkg-owned);
+ state lives under /srv/writer-app and is never touched by the package.

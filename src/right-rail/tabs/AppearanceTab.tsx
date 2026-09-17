@@ -1,0 +1,112 @@
+/**
+ * Appearance tab — typography, theme, spacing, canvas, layout settings.
+ * Migrated from src/themes/AppearancePanel.tsx (titlebar dropdown).
+ * adr: adr/right-rail.md
+ */
+import { useState } from 'react';
+import {
+  TYPEFACES, SPACING_PRESETS, CANVAS_STYLES,
+  getTypeface, getMode, getSidebarMode, getSidebarStyle, getSpacing, getCanvasStyle, applyAppearance,
+} from '../../themes/appearance-store';
+import type { Typeface, ThemeMode, SidebarMode, SidebarStyle, SpacingPreset, CanvasStyle } from '../../themes/appearance-store';
+import type { RightRailTabProps } from '../types';
+
+export default function AppearanceTab(_props: RightRailTabProps) {
+  const [typeface, setTypeface] = useState<Typeface>(getTypeface);
+  const [mode, setMode] = useState<ThemeMode>(getMode);
+  const sidebarMode = getSidebarMode();
+  const sidebarStyle = getSidebarStyle();
+  const [spacing, setSpacing] = useState<SpacingPreset>(getSpacing);
+  const [canvasStyle, setCanvasStyle] = useState<CanvasStyle>(getCanvasStyle);
+
+  const apply = (
+    tf: Typeface = typeface,
+    m: ThemeMode = mode,
+    sm: SidebarMode = sidebarMode,
+    ss: SidebarStyle = sidebarStyle,
+    sp: SpacingPreset = spacing,
+    cs: CanvasStyle = canvasStyle,
+  ) => {
+    applyAppearance(tf, m, sm, ss, sp, cs);
+  };
+
+  const handleTypeface = (id: Typeface) => { setTypeface(id); apply(id); };
+  const handleMode = () => {
+    const next = mode === 'light' ? 'dark' : 'light';
+    setMode(next);
+    apply(undefined, next);
+  };
+  const handleSpacing = (id: SpacingPreset) => { setSpacing(id); apply(undefined, undefined, undefined, undefined, id); };
+  const handleCanvasStyle = (id: CanvasStyle) => { setCanvasStyle(id); apply(undefined, undefined, undefined, undefined, undefined, id); };
+
+  return (
+    <div className="appearance-tab">
+      <div className="appearance-section">
+        <div className="appearance-section-header">
+          <span className="appearance-section-title">Mode</span>
+          <button className="appearance-mode-btn" onClick={handleMode} title={mode === 'light' ? 'Switch to dark' : 'Switch to light'}>
+            {mode === 'light' ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            )}
+            <span>{mode === 'light' ? 'Light' : 'Dark'}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="appearance-section">
+        <div className="appearance-section-header">
+          <span className="appearance-section-title">Typography</span>
+        </div>
+        <div className="appearance-typeface-grid">
+          {TYPEFACES.map((t) => (
+            <button
+              key={t.id}
+              className={`appearance-style-option ${typeface === t.id ? 'active' : ''}`}
+              onClick={() => handleTypeface(t.id)}
+              title={t.description}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="appearance-section">
+        <div className="appearance-section-header">
+          <span className="appearance-section-title">Spacing</span>
+        </div>
+        <div className="appearance-typography-grid">
+          {SPACING_PRESETS.map((s) => (
+            <button
+              key={s.id}
+              className={`appearance-style-option ${spacing === s.id ? 'active' : ''}`}
+              onClick={() => handleSpacing(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="appearance-section">
+        <div className="appearance-section-header">
+          <span className="appearance-section-title">Canvas</span>
+        </div>
+        <div className="appearance-style-grid">
+          {CANVAS_STYLES.map((c) => (
+            <button
+              key={c.id}
+              className={`appearance-style-option ${canvasStyle === c.id ? 'active' : ''}`}
+              onClick={() => handleCanvasStyle(c.id)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+}

@@ -1,0 +1,11 @@
+{
+  "workspacesBase": "/srv/writer-app/workspaces",
+  "cloneDir": "/srv/writer-app/orchestrator/clone",
+  "mainBranch": "main",
+  "mergeDir": "articles",
+  "branchPrefix": "article",
+  "pollIntervalMs": 60000,
+  "stateDir": "/srv/writer-app/orchestrator/state",
+  "git": { "authorName": "writer-orchestrator", "authorEmail": "writer-orchestrator@users.noreply.gitea.example.com" },
+  "gitea": { "apiBaseUrl": "https://gitea.example.com:3000" }
+}

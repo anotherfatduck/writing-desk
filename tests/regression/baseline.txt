@@ -1,0 +1,8 @@
+  FAIL: absolute paths canonicalize the same regardless of separator
+  FAIL: dd000001 (inserted after snapshot) no longer in active nodes after restore
+  FAIL: disk has 6+ nodes (got 5: ["head0001","para0001","para0002","para0003","para0004"])
+  FAIL: forward-slash and back-slash converge
+  FAIL: forward-slash and mixed converge
+  FAIL: internal file (backslashes) classifies as internal
+  FAIL: restored body has "Original paragraph one..." text
+  FAIL: restored body has "Original paragraph two..." text

@@ -1,0 +1,1053 @@
+/* Pending decoration styles */
+
+/* Insert: green */
+.pending-insert {
+  color: var(--color-pending-insert);
+  background-color: var(--color-pending-insert-bg);
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+/* Rewrite: blue */
+.pending-rewrite {
+  color: var(--color-pending-rewrite);
+  background-color: var(--color-pending-rewrite-bg);
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+/* Delete: red + strikethrough */
+.pending-delete {
+  color: var(--color-pending-delete);
+  background-color: var(--color-pending-delete-bg);
+  border-radius: 2px;
+  text-decoration: line-through;
+  text-decoration-color: var(--color-pending-delete);
+  opacity: 0.8;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Original preview: red tint, no strikethrough */
+.pending-original {
+  color: var(--color-pending-delete);
+  background-color: var(--color-pending-delete-bg);
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+/* Orphan: agent's anchor disappeared, content preserved at end of doc.
+ * Purple overlay layered onto the base pending class. */
+.pending-orphan {
+  color: var(--color-pending-orphan);
+  background-color: var(--color-pending-orphan-bg);
+  box-shadow: inset 0 -1px 0 var(--color-pending-orphan-border);
+}
+.pending-orphan:hover { background-color: rgba(147, 51, 234, 0.18); }
+
+/* Stale-baseline: agent's rewrite baseline drifted out from under it.
+ * Amber dotted-underline overlay layered onto the base pending class.
+ * Distinct from orphan (orphan = anchor gone; stale = anchor present
+ * but content shifted). */
+.pending-stale {
+  background-color: var(--color-pending-stale-bg);
+  text-decoration: underline dotted;
+  text-decoration-color: var(--color-pending-stale);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+}
+.pending-stale:hover { background-color: rgba(217, 119, 6, 0.2); }
+
+/* Block-level orphan + stale on non-text nodes (images, code blocks) —
+ * highlight via border since color/background-color may not apply. */
+img.pending-orphan, pre.pending-orphan {
+  box-shadow: 0 0 0 1.5px var(--color-pending-orphan-border);
+  border-radius: 4px;
+}
+img.pending-stale, pre.pending-stale {
+  box-shadow: 0 0 0 1.5px var(--color-pending-stale-border);
+  border-radius: 4px;
+}
+
+/* Comment: dotted underline (formerly "agent mark") */
+.ow-comment {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--ink-light, #94a3b8);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+  cursor: help;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.ow-comment:hover {
+  text-decoration-color: var(--accent, #2563eb);
+}
+
+/* Comment popover: hover-anchored card. View mode shows a stack of comment
+ * cards (one per sibling/nested comment), edit/compose mode swaps in a
+ * textarea. Positioned via inline styles by CommentPopover. */
+.ow-comment-popover {
+  position: fixed;
+  z-index: 100;
+  width: 320px;
+  background: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--font-body);
+  color: var(--ink-dark);
+  /* Slight fade-in so the popover doesn't feel jarring on hover */
+  animation: ow-comment-popover-fade-in 90ms ease-out;
+  /* Cap height + allow internal scroll when many comments stack */
+  overflow-y: auto;
+}
+
+/* Stack container holds one or more comment cards. Single card is a no-op
+ * visually; multi-card adds dividers between cards. */
+.ow-comment-popover-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ow-comment-popover-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ow-comment-popover-card-divider {
+  border-top: 1px solid var(--border, #e2e8f0);
+  padding-top: 10px;
+}
+
+@keyframes ow-comment-popover-fade-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ow-comment-popover-text {
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ow-comment-popover-empty {
+  font-size: 13px;
+  color: var(--ink-light, #94a3b8);
+  font-style: italic;
+}
+
+.ow-comment-popover-textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  font-family: var(--font-body);
+  resize: vertical;
+  min-height: 72px;
+  box-sizing: border-box;
+  line-height: 1.4;
+  background: var(--bg-surface, #ffffff);
+  color: var(--ink-dark);
+}
+
+.ow-comment-popover-textarea:focus {
+  border-color: var(--accent, #2563eb);
+}
+
+.ow-comment-popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 2px;
+}
+
+.ow-comment-popover-hint {
+  font-size: 11px;
+  color: var(--ink-light, #94a3b8);
+  /* Push the hint to the left so the save icon stays right-aligned */
+  margin-right: auto;
+}
+
+/* Generic icon button — matches the floating toolbar's convention so the app
+ * has one button vocabulary. 30x30 square, no border, hover fills with bg-hover. */
+.ow-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ink-dark);
+  border-radius: 6px;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.ow-icon-btn:hover:not(:disabled) {
+  background: var(--bg-hover, #f1f5f9);
+}
+
+.ow-icon-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Destructive variant: same neutral resting state, red tint on hover so the
+ * intent reads visually before the user commits to clicking. */
+.ow-icon-btn-danger:hover:not(:disabled) {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+/* Linked paragraph: this paragraph has inbound links from elsewhere in the
+ * workspace. Right-click → "See connections" lists the source docs.
+ * Distinct visual style from comments (block-level dotted underline,
+ * slightly bolder; comments are inline).
+ */
+.linked-paragraph {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--accent-muted, #cbd5e1);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+  text-decoration-skip-ink: none;
+  cursor: context-menu;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.linked-paragraph:hover {
+  text-decoration-color: var(--accent, #2563eb);
+}
+
+/* Brief flash when a link click scrolls to a target paragraph or quote.
+ * Auto-removed after ~1.2s by App.tsx. */
+.scroll-target-flash {
+  animation: scroll-target-flash 1.2s ease-out;
+}
+@keyframes scroll-target-flash {
+  0%   { background-color: var(--accent-soft, rgba(37, 99, 235, 0.18)); }
+  100% { background-color: transparent; }
+}
+
+/* Image pending states — visible border since text styling doesn't apply to images */
+img.pending-insert {
+  box-shadow: 0 0 0 1.5px var(--color-pending-insert-border);
+  border-radius: 4px;
+}
+
+img.pending-rewrite {
+  box-shadow: 0 0 0 1.5px var(--color-pending-rewrite-border);
+  border-radius: 4px;
+}
+
+img.pending-delete {
+  box-shadow: 0 0 0 1.5px var(--color-pending-delete-border);
+  border-radius: 4px;
+  opacity: 0.4;
+}
+
+/* Hover states */
+.pending-insert:hover { background-color: rgba(22, 163, 74, 0.15); }
+.pending-rewrite:hover { background-color: rgba(37, 99, 235, 0.15); }
+.pending-delete:hover { background-color: rgba(231, 76, 60, 0.15); opacity: 0.9; }
+
+/* Active gutter line — only on focused pending node */
+.pending-active { position: relative; }
+.pending-active::before {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+.pending-active--insert::before { background: var(--color-pending-insert-border); }
+.pending-active--rewrite::before { background: var(--color-pending-rewrite-border); }
+.pending-active--delete::before { background: var(--color-pending-delete-border); }
+.pending-active--original::before { background: var(--color-pending-delete-border); }
+
+/* Original/Modified toggle */
+.review-panel__toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.review-panel__toggle-btn {
+  height: 28px;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--ink-light);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.review-panel__toggle-btn:hover {
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+}
+
+.review-panel__toggle-btn--active {
+  background: var(--color-pending-rewrite-bg);
+  color: var(--color-pending-rewrite);
+}
+
+.review-panel__toggle-btn--active:hover {
+  background: var(--color-pending-rewrite-bg);
+  color: var(--color-pending-rewrite);
+}
+
+.review-panel__toggle-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.review-panel__toggle-btn:disabled:hover {
+  background: transparent;
+  color: var(--ink-light);
+}
+
+/* Review-panel button/toggle classes survive the migration into the right
+ * rail's Review tab (the inner controls reuse the same look). The outer
+ * floating-bar chrome that used to wrap them is gone — the tab body is
+ * the container now. adr: adr/right-rail.md
+ */
+
+.review-panel__nav { display: flex; gap: 3px; align-items: center; }
+
+.review-panel__btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+.review-panel__btn:hover {
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+}
+
+.review-panel__btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.review-panel__divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+.review-panel__counter {
+  font-size: 13px;
+  color: var(--ink-light);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.review-panel__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.review-panel__dot--insert { background: var(--color-pending-insert); }
+.review-panel__dot--rewrite { background: var(--color-pending-rewrite); }
+.review-panel__dot--delete { background: var(--color-pending-delete); }
+
+.review-panel__status {
+  font-size: 13px;
+  color: var(--ink-light);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.review-panel__actions { display: flex; gap: 4px; }
+
+.review-panel__accept {
+  width: 30px;
+  height: 30px;
+  background: var(--color-pending-insert);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.review-panel__accept:hover { filter: brightness(0.85); }
+
+.review-panel__reject {
+  width: 30px;
+  height: 30px;
+  background: var(--bg-surface);
+  color: var(--color-pending-delete);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.review-panel__reject:hover {
+  background: var(--color-pending-delete-bg);
+  border-color: var(--color-pending-delete-border);
+  color: var(--color-pending-delete);
+}
+
+.review-panel__accept-all {
+  height: 30px;
+  padding: 0 10px;
+  background: transparent;
+  color: var(--color-pending-insert);
+  border: 1px solid var(--color-pending-insert);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.review-panel__accept-all:hover {
+  background: var(--color-pending-insert);
+  color: white;
+}
+
+.review-panel__reject-all {
+  height: 30px;
+  padding: 0 10px;
+  background: var(--bg-surface);
+  color: var(--color-pending-delete);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.review-panel__reject-all:hover {
+  background: var(--color-pending-delete-bg);
+  border-color: var(--color-pending-delete-border);
+  color: var(--color-pending-delete);
+}
+
+/* Dark mode overrides */
+[data-mode="dark"] .review-panel__btn {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: transparent;
+}
+
+[data-mode="dark"] .review-panel__btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-mode="dark"] .review-panel__divider {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-mode="dark"] .review-panel__reject,
+[data-mode="dark"] .review-panel__reject-all {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-mode="dark"] .review-panel__reject:hover,
+[data-mode="dark"] .review-panel__reject-all:hover {
+  background: var(--color-pending-delete-bg);
+  border-color: var(--color-pending-delete-border);
+}
+
+[data-mode="dark"] .review-panel__accept:hover {
+  filter: brightness(1.15);
+}
+
+[data-mode="dark"] .review-panel__accept-all:hover {
+  background: var(--color-pending-insert);
+  color: white;
+  filter: brightness(1.15);
+}
+
+/* Flash animations */
+@keyframes flash-accept {
+  0% { background-color: rgba(22, 163, 74, 0.3); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flash-reject {
+  0% { background-color: rgba(220, 38, 38, 0.3); }
+  100% { background-color: transparent; }
+}
+
+/* Titlebar styles */
+.titlebar {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, auto) 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-titlebar);
+  height: 48px;
+  flex-shrink: 0;
+}
+
+.titlebar-left { display: flex; align-items: center; gap: 8px; justify-self: start; }
+
+.titlebar-center {
+  justify-self: stretch;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.titlebar-update-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(37, 99, 235, 0.1);
+  padding: 1px 6px;
+  border-radius: 8px;
+  cursor: default;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.titlebar-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ink-light);
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.titlebar-menu-btn:hover {
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+}
+
+.titlebar-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ink-light);
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.titlebar-nav-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+}
+
+.titlebar-nav-btn:disabled {
+  color: var(--border);
+  cursor: default;
+}
+
+.titlebar-nav-btn--active {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--accent);
+}
+
+.titlebar-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+.titlebar-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-dark);
+  cursor: pointer;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.titlebar-input {
+  font-size: 15px;
+  font-weight: 500;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  outline: none;
+  font-family: var(--font-body);
+}
+
+.titlebar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: end;
+}
+
+.titlebar-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-dark);
+  font-family: var(--font-body);
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.titlebar-btn:hover {
+  background: var(--bg-hover);
+  border-color: #cbd5e1;
+}
+
+.titlebar-btn.submitted {
+  background: var(--color-pending-insert);
+  color: white;
+  border-color: var(--color-pending-insert);
+  cursor: default;
+}
+
+.titlebar-btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.titlebar-btn.primary:hover {
+  background: #1d4ed8;
+}
+
+/* Context menu */
+.context-menu {
+  position: fixed;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  z-index: 2000;
+  min-width: 180px;
+}
+
+.context-menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-dark);
+  border-radius: 4px;
+  text-align: left;
+  font-family: var(--font-body);
+}
+
+.context-menu-item:hover {
+  background: var(--bg-hover);
+}
+
+.context-menu-shortcut {
+  font-size: 11px;
+  color: var(--ink-light);
+  margin-left: 16px;
+}
+
+.context-menu-loading {
+  padding: 12px;
+  text-align: center;
+  color: var(--ink-light);
+  font-size: 13px;
+}
+
+.context-menu-custom {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+}
+
+.context-menu-custom input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  font-family: var(--font-body);
+}
+
+.context-menu-custom input:focus {
+  border-color: var(--accent);
+}
+
+.context-menu-custom button {
+  padding: 6px 12px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+
+.context-menu-comment-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  width: 340px;
+}
+
+.context-menu-comment-quote {
+  font-size: 12px;
+  color: var(--ink-dark);
+  background: var(--bg-hover);
+  border-left: 2px solid var(--accent, #2563eb);
+  padding: 6px 10px;
+  border-radius: 3px;
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: var(--font-body);
+  line-height: 1.45;
+  opacity: 0.85;
+}
+
+.context-menu-comment-textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  font-family: var(--font-body);
+  resize: vertical;
+  min-height: 72px;
+  box-sizing: border-box;
+  line-height: 1.4;
+  background: var(--bg-surface);
+  color: var(--ink-dark);
+}
+
+.context-menu-comment-textarea:focus {
+  border-color: var(--accent);
+}
+
+.context-menu-comment-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.context-menu-comment-hint {
+  font-size: 11px;
+  color: var(--ink-light);
+}
+
+.context-menu-comment-actions button {
+  padding: 6px 12px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+
+.context-menu-link-picker {
+  max-height: 240px;
+  display: flex;
+  flex-direction: column;
+}
+
+.context-menu-link-header {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.context-menu-link-list {
+  overflow-y: auto;
+  max-height: 240px;
+}
+
+.context-menu-new-link {
+  color: var(--accent) !important;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.context-menu-section-header {
+  padding: 6px 12px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.context-menu-submenu-trigger {
+  position: relative;
+}
+
+/* Doc row in the link picker with optional ▸ drill button.
+ * Single-click on title commits whole-doc; click ▸ drills into paragraphs. */
+.context-menu-link-row {
+  display: flex;
+  align-items: stretch;
+}
+.context-menu-link-row__main {
+  flex: 1;
+  min-width: 0;
+}
+.context-menu-link-row__drill {
+  background: transparent;
+  border: none;
+  color: var(--ink-light);
+  cursor: pointer;
+  padding: 0 10px;
+  font-size: 13px;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+.context-menu-link-row__drill:hover {
+  background: var(--bg-hover);
+  color: var(--accent, #2563eb);
+}
+
+/* Back button on the paragraph-picker header */
+.context-menu-link-back {
+  background: transparent;
+  border: none;
+  color: var(--ink-light);
+  cursor: pointer;
+  padding: 0 6px 0 0;
+  font-size: 13px;
+  transition: color 0.1s ease;
+}
+.context-menu-link-back:hover {
+  color: var(--accent, #2563eb);
+}
+
+/* Paragraph row inside the paragraph picker — visually distinct from doc rows */
+.context-menu-paragraph-row {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.context-menu-paragraph-row--heading {
+  font-weight: 600;
+  color: var(--ink-dark);
+}
+.context-menu-paragraph-row--paragraph {
+  color: var(--ink-light);
+}
+.context-menu-paragraph-row span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.context-menu-submenu-arrow {
+  font-size: 10px;
+  color: var(--ink-light);
+  margin-left: 8px;
+}
+
+.context-menu-submenu {
+  min-width: 140px;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 4px 0;
+}
+
+.sidebar-ctx-confirm {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+}
+.sidebar-ctx-confirm button {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+}
+.sidebar-ctx-confirm button:first-of-type {
+  color: var(--color-delete, #ef4444);
+}
+.sidebar-ctx-delete span {
+  color: var(--color-delete, #ef4444);
+}
+
+/* Folder delete — two-option prompt (folder only vs. folder + docs) */
+.sidebar-ctx-folder-delete {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  min-width: 220px;
+}
+
+.sidebar-ctx-folder-delete-prompt {
+  padding: 6px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-ctx-delete-option {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start !important;
+  gap: 2px;
+  padding: 6px 12px !important;
+}
+
+.sidebar-ctx-delete-option .sidebar-ctx-delete-hint {
+  font-size: 11px;
+  color: var(--ink-light);
+  font-weight: 400;
+}
+
+.sidebar-ctx-delete-cancel {
+  color: var(--ink-light);
+}
+
+/* Table styles */
+.tiptap table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.tiptap th,
+.tiptap td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.tiptap th {
+  background: var(--bg-hover);
+  font-weight: 600;
+}
+
+/* Internal doc-link styling lives in themes/canvas-styles.css (.tiptap .doc-link).
+ * Don't add a second rule here — duplicate styling stacks an underline + border-bottom
+ * on hover, which renders as a doubled line. */
+
+@media (max-width: 640px) {
+  .review-panel__status { display: none; }
+}
+
+/* ============================================================================
+ * Author-attribution heatmap (voice-shape view toggle).
+ * A per-block background overlay tinted by origin — no gutter bar. A VIEW MODE,
+ * only present when the user flips the heatmap on. "unknown" (pre-attribution
+ * content) paints nothing, so an untracked doc stays clean and only content we
+ * actually know lights up. adr: adr/0006-document-history-attribution.md
+ * ========================================================================== */
+.attr-block {
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+/* Human — the author's own words. Blue wash. */
+.attr-human { background-color: var(--color-attr-human-bg, rgba(59, 130, 246, 0.10)); }
+/* Agent — agent-scaffolded, the thing worth spotting. Amber wash. */
+.attr-agent { background-color: var(--color-attr-agent-bg, rgba(217, 119, 6, 0.13)); }
+/* Mixed — both authors touched this block. Faded amber. */
+.attr-mixed { background-color: var(--color-attr-mixed-bg, rgba(180, 83, 9, 0.10)); }
+/* Unknown — pre-attribution content. No overlay (deliberately blank). */
+/* The toggle now lives as an icon button in the right-rail topbar
+ * (src/right-rail/RightRail.tsx), not a floating pill. adr: adr/0006-document-history-attribution.md */

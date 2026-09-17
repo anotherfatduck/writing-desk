@@ -1,0 +1,555 @@
+/* ─── Files Tree Sidebar ─── */
+
+.files-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.files-section + .files-section {
+  border-top: 1px solid var(--border);
+}
+
+.files-section-list {
+  padding: 0;
+}
+
+/* ─── Unified row — every item is the same height ─── */
+.files-row {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 12px;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.files-row:hover {
+  background: var(--bg-hover);
+}
+
+.files-row.active {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* Multi-selection (orthogonal to active) — inset left bar + stronger tint */
+.files-row.selected {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.files-row.active.selected {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+/* Chevron — trailing (variants, far right) */
+.files-row-chevron {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--ink-light);
+  margin-left: auto;
+  transition: transform 0.15s ease;
+  opacity: 0.5;
+}
+
+.files-row:hover .files-row-chevron {
+  opacity: 1;
+}
+
+.files-row-chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+/* Chevron — leading (workspace/container/section headers) */
+.files-row-chevron.leading {
+  margin-left: 0;
+  margin-right: 4px;
+  opacity: 0.9;
+  color: var(--ink-medium, var(--ink-dark));
+}
+
+.files-row:hover .files-row-chevron.leading {
+  opacity: 1;
+}
+
+.files-row-chevron svg {
+  flex-shrink: 0;
+}
+
+/* Row icon */
+.files-row-icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 7px;
+  color: var(--ink-light);
+}
+
+.files-row-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Active row icon gets accent */
+.files-row.active .files-row-icon {
+  color: var(--accent);
+}
+
+/* Row label — leaf docs are the brightest (click targets) */
+.files-row-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-dark);
+  line-height: 36px;
+}
+
+/* Library rows carry tags + chip + Adopt alongside the title (M3): the
+   title takes its content width but never resolves below a readable
+   share — the tags give. */
+.library-row .files-row-label {
+  flex-basis: auto;
+  min-width: 30%;
+}
+
+/* Chips are the secondary give on library rows (final review: the
+   unsrinkable set — icon + chips + Adopt + chevron — alone exceeded the
+   content box once the title floor clamped, annihilating the tags). */
+.library-row .wa-lifecycle {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.files-row.active .files-row-label {
+  color: var(--accent);
+}
+
+/* Section header rows — bolder, no icon. Bright (workspace identity) */
+.files-row.is-section .files-row-label {
+  font-weight: 600;
+  color: var(--ink-dark);
+}
+
+.files-row.is-section .files-row-icon {
+  display: none;
+}
+
+/* Container rows — dim middle tier (organizational scaffolding, not focus) */
+.files-row.is-container .files-row-label {
+  font-weight: 600;
+  color: var(--ink-body);
+}
+
+/* Collapsed ancestor of the active doc — the open doc's row is hidden, so its
+   chain (workspace / container / variant master) carries the accent instead.
+   After the is-section/is-container label rules so the accent wins. */
+.files-row.active-within {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.files-row.active-within .files-row-label,
+.files-row.active-within .files-row-icon {
+  color: var(--accent);
+}
+
+/* Section action buttons (+ doc, + container) */
+.files-section-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--ink-light);
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.1s ease, color 0.1s ease;
+  flex-shrink: 0;
+}
+
+.files-row:hover .files-section-btn {
+  opacity: 0.6;
+}
+
+.files-section-btn:hover {
+  opacity: 1 !important;
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+}
+
+.files-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+/* Count badge */
+.files-row-count {
+  font-size: 11px;
+  color: var(--ink-light);
+  margin-left: 4px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* Badges */
+.files-badge-pending {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+.files-badge-approved {
+  flex-shrink: 0;
+  margin-left: 4px;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+}
+
+.files-badge-sent {
+  flex-shrink: 0;
+  margin-left: 4px;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+}
+
+/* Sort-request badges. Pending = small open ring (orange). Proposal-ready =
+   filled (amber) so the user can tell at a glance which state. */
+.files-badge-sort-pending,
+.files-badge-sort-proposal {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+.files-badge-sort-pending {
+  border: 1.5px solid #f59e0b;
+  background: transparent;
+}
+.files-badge-sort-proposal {
+  background: #f59e0b;
+}
+
+/* Sort proposal block inside the context menu — wraps reasoning text + buttons. */
+.sidebar-ctx-sort-proposal {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.sidebar-ctx-sort-proposal-label {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.sidebar-ctx-sort-proposal-reason {
+  color: var(--ink-light);
+  margin-bottom: 6px;
+  line-height: 1.35;
+}
+.sidebar-ctx-sort-proposal-actions {
+  display: flex;
+  gap: 6px;
+}
+.sidebar-ctx-sort-proposal-actions button {
+  flex: 1;
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+  cursor: pointer;
+}
+.sidebar-ctx-sort-proposal-actions button:first-child {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: white;
+}
+
+.sidebar-ctx-sort-pending {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.sidebar-ctx-sort-pending-label {
+  color: var(--ink-body);
+}
+.sidebar-ctx-sort-pending button {
+  padding: 2px 8px;
+  font-size: 11px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--bg-hover);
+  color: var(--ink-dark);
+  cursor: pointer;
+}
+
+/* Variant badge */
+.files-badge-variant {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  margin-left: 6px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+}
+
+/* Variant row — slightly dimmer to distinguish from master */
+.files-row.is-variant .files-row-icon {
+  opacity: 0.5;
+}
+
+/* Collapsed children */
+.files-children.collapsed {
+  display: none;
+}
+
+/* ─── Drag and drop ─── */
+.files-row[data-drag-id],
+.files-row[data-ws-drag] {
+  cursor: grab;
+}
+
+.files-row.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.files-section.dragging {
+  opacity: 0.4;
+}
+
+/* Drop position indicators — left edge indents to target depth via --drop-indent */
+.files-row.drop-before::before,
+.files-row.drop-after::after {
+  content: '';
+  position: absolute;
+  left: var(--drop-indent, 12px);
+  right: 4px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.files-row.drop-before::before { top: -1px; }
+.files-row.drop-after::after { bottom: -1px; }
+
+/* Drop indicator dot — circle at the left edge of the line */
+.files-row.drop-before::after,
+.files-row.drop-after::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--drop-indent, 12px) - 3px);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.files-row.drop-before::after { top: -3px; }
+.files-row.drop-after::before { bottom: -3px; }
+
+/* Container drop-inside highlight */
+.files-drop-inside {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-radius: 4px;
+}
+
+/* Workspace reorder indicators */
+.files-section.files-ws-drop-before { border-top: 2px solid var(--accent); }
+.files-section.files-ws-drop-after { border-bottom: 2px solid var(--accent); }
+
+/* Workspace header drop-inside highlight (doc dropped onto collapsed workspace) */
+.files-row.is-section.files-ws-drop-target {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Drop zone highlight for empty sections */
+.files-section-list[data-drop-ws] {
+  min-height: 4px;
+}
+
+/* New workspace button */
+.files-new-ws {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.files-new-ws button {
+  width: 100%;
+  padding: 6px 0;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink-light);
+  font-family: var(--font-body);
+  transition: all 0.15s ease;
+}
+
+.files-new-ws button:hover {
+  border-color: #cbd5e1;
+  color: var(--ink-dark);
+  background: var(--bg-hover);
+}
+
+/* Review-lifecycle chips */
+.wa-lifecycle {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  color: var(--ink-body);
+  margin-left: 6px;
+  flex-shrink: 0;
+  text-transform: lowercase;
+}
+
+.wa-lifecycle--in-review {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.wa-lifecycle--published {
+  color: var(--ink-light);
+}
+
+.wa-lifecycle--returned {
+  color: var(--color-pending-delete);
+  border-color: var(--color-pending-delete-border);
+}
+
+.wa-lifecycle--conflict {
+  color: var(--color-pending-delete);
+  border-color: var(--color-pending-delete-border);
+}
+
+.wa-lifecycle--adopted {
+  color: var(--color-pending-stale);
+  border-color: var(--color-pending-stale-border);
+  background: var(--color-pending-stale-bg);
+}
+
+/* ─── Library section (second section — a shelf view over the librarian's
+   mirrors, not a desk tree). Read-only rows: the only affordances are Adopt
+   and the preview expansion. ─── */
+.files-row.library-row {
+  padding-left: 24px;
+}
+
+.files-row.library-row:hover {
+  background: var(--bg-hover);
+}
+
+/* Topics render as tags on the row, never as folders (spec §3). */
+.library-tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--bg-hover);
+  color: var(--ink-light);
+  margin-left: 4px;
+  /* The give — tags shrink and ellipsize so the title keeps a readable
+     share (M3: unshrinkable tags crushed titles to single letters). */
+  flex-shrink: 1;
+  min-width: 2em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.library-adopt {
+  font-size: 10px;
+  padding: 2px 8px;
+  margin-left: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-body);
+  font-family: var(--font-body);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.library-adopt:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.library-adopt:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Preview expansion — plain text in a <pre>, no markdown renderer (YAGNI). */
+.library-preview {
+  padding: 6px 12px 10px 24px;
+}
+
+.library-preview pre {
+  margin: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-body);
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.files-row.library-empty {
+  cursor: default;
+}
+
+.files-row.library-empty .files-row-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-light);
+  font-style: italic;
+}
