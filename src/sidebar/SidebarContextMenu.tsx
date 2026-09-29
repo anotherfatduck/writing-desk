@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { isExternal } from './sidebar-utils';
+import { RETURN_TO_LIBRARY_QUESTION } from './return-copy';
 
 export interface SidebarMenuItem {
   label: string;
@@ -88,7 +89,7 @@ export default function SidebarContextMenu({ x, y, filename, title, onClose, onD
       </button>
       {onRestoreFromLibrary && (confirmReturn ? (
         <div className="context-menu-item sidebar-ctx-confirm" onClick={(e) => e.stopPropagation()}>
-          <span>Return this book to the library? Your desk copy is discarded — your text stays in History.</span>
+          <span>{RETURN_TO_LIBRARY_QUESTION}</span>
           <button onClick={() => { onRestoreFromLibrary(); onClose(); }}>Yes</button>
           <button onClick={() => setConfirmReturn(false)}>No</button>
         </div>

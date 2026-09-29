@@ -35,6 +35,36 @@ export interface ConductorToolDef {
 
 const READ_DOC_MAX_CHARS = 120_000;
 
+// Per-tool human summaries — the chat progress rail says what happened in the
+// writer's language, not the tool JSON's; the model still gets the raw payload.
+// Spec: docs/superpowers/specs/2026-09-29-chat-progress-summary-design.md
+type ToolPayload = Record<string, any> | null;
+const TOOL_SUMMARIZERS: Record<string, (p: ToolPayload) => string> = {
+  read_document: (p) =>
+    `Read "${p?.title ?? 'document'}" — ${p?.wordCount ?? 0} words, ${p?.pendingCount ?? 0} pending${p?.truncated ? ', truncated' : ''}`,
+  read_workspace: (p) =>
+    `Workspace — ${Array.isArray(p?.documents) ? p.documents.length : 0} document(s), ${Array.isArray(p?.workspaces) ? p.workspaces.length : 0} workspace(s)`,
+  propose_edits: (p) => {
+    const applied = typeof p?.appliedCount === 'number' ? p.appliedCount : 0;
+    const skipped = typeof p?.skipped === 'number' ? p.skipped : 0;
+    if (applied === 0 && skipped === 0) return 'Nothing staged';
+    if (applied === 0) return `Nothing staged, ${skipped} skipped`;
+    return `Staged ${applied} change(s)${skipped ? `, ${skipped} skipped` : ''} — awaiting review`;
+  },
+};
+
+/** One-line human summary of a tool result for the chat progress rail.
+ *  Unknown tool, missing summarizer, or unparseable payload → '' — the caller's
+ *  `summary || (ok ? 'ok' : 'failed')` fallback keeps the line nonempty. */
+export function toolSummarize(toolName: unknown, resultText: string): string {
+  if (typeof toolName !== 'string') return '';
+  const summarize = TOOL_SUMMARIZERS[toolName];
+  if (!summarize) return '';
+  let parsed: unknown;
+  try { parsed = JSON.parse(resultText); } catch { return ''; }
+  return summarize(parsed && typeof parsed === 'object' ? parsed : null);
+}
+
 function buildProvenance(ctx: ConductorContext): ProposedProvenance {
   return {
     agentSessionId: ctx.sessionId,

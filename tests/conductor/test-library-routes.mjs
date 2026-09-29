@@ -23,6 +23,7 @@ process.env.OW_HOME = PARENT_HOME;
 mkdirSync(PARENT_HOME, { recursive: true });
 
 const documents = await import('../../dist/server/documents.js');
+const { renderLibraryPreview } = await import('../../dist/server/library-render.js');
 
 let failed = 0;
 const assert = (cond, msg) => { if (cond) console.log(`  ok: ${msg}`); else { failed++; console.error(`  FAIL: ${msg}`); } };
@@ -158,6 +159,13 @@ writeFileSync(join(libDir, 'taxonomy.json'), taxonomyRaw);
   assert(typeof body.body === 'string' && body.body.includes('First article body.') && body.body.includes('Second paragraph.'),
     'library read: body is the matter-stripped markdown');
   assert(!body.body.includes('docId:'), 'library read: body carries no frontmatter');
+
+  assert(typeof body.html === 'string' && body.html.includes('<p>First article body.</p>'),
+    'library read: html is the rendered preview');
+  assert(body.html.includes('<p>Second paragraph.</p>'), 'library read: html renders every paragraph');
+  assert(!body.html.includes('docId:'), 'library read: html carries no frontmatter');
+  assert(body.html === renderLibraryPreview(body.body),
+    'library read: html equals the renderer\'s output for this fixture (single renderer contract)');
 
   const missing = await api(app, 'GET', `/api/library/${DOC_MISSING}`);
   assert(missing.status === 404, `GET /api/library/:docId (missing) → 404 (got ${missing.status})`);

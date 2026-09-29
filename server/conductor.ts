@@ -5,7 +5,7 @@
  * persistence, progress callback, and Langfuse join metadata.
  */
 import { z } from 'zod';
-import { CONDUCTOR_TOOLS, CONDUCTOR_TOOL_NAMES } from './conductor-tools.js';
+import { CONDUCTOR_TOOLS, CONDUCTOR_TOOL_NAMES, toolSummarize } from './conductor-tools.js';
 import type { ConductorToolResult } from './conductor-tools.js';
 import { appendChatEvent, loadTranscript, readTitleInfo, writeTitleInfo, normalizeTitle, type ChatEvent } from './chat-sessions.js';
 import { resolveLlmBaseUrl } from './deploy-env.js';
@@ -320,7 +320,8 @@ export async function runChatTurn(
                 const text = result.content.map((c) => c.text).join('\n');
                 // 4000-char truncation inherited from the audited fork harness.
                 resultContent = text.slice(0, 4000);
-                summary = text.slice(0, 120);
+                // The chat rail gets one human line (spec 2026-09-29); raw JSON stays model-facing.
+                summary = toolSummarize(toolName, text);
                 ok = true;
                 if (result.terminal) {
                   isTerminal = true;

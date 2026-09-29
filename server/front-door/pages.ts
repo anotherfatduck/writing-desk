@@ -149,7 +149,7 @@ export const pages = {
         f.querySelector('[data-err]').textContent = j.error || 'Setup failed';
       };
     </script>`),
-  login: (site: string = DEFAULT_SITE_NAME) => SHELL(`${site} · Log in to your writing desk`, `
+  login: (site: string = DEFAULT_SITE_NAME, version: string = '') => SHELL(`${site} · Log in to your writing desk`, `
     <h1>Log in</h1>
     <p class="lede">Paste the writer token you were given.</p>
     <form data-login-form>
@@ -172,7 +172,7 @@ export const pages = {
         f.querySelector('[data-err]').textContent = j.error || 'Login failed';
       };
     </script>
-    <p class="foot">© Writing Desk 2026. All rights reserved.<br>A writing desk by <a href="https://thereisnospoon.dev">thereisnospoon.dev</a> built on <a href="https://github.com/travsteward/openwriter">openwriter</a> (MIT)</p>`),
+    <p class="foot">© Writing Desk 2026. All rights reserved.<br>A writing desk by <a href="https://thereisnospoon.dev">thereisnospoon.dev</a> built on <a href="https://github.com/travsteward/openwriter">openwriter</a> (MIT)${version ? `<br>writer app v${escTitle(version)}` : ''}</p>`),
   corrupt: (site: string = DEFAULT_SITE_NAME) => SHELL(`${site} · Settings problem`, `
     <h1>Something is wrong with the settings</h1>
     <p class="lede">This app is set up but its settings file is damaged.</p>

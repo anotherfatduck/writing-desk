@@ -10,7 +10,7 @@
 import express, { type Express } from 'express';
 import type { Socket } from 'net';
 import http from 'node:http';
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { mintMasterKey, writeStore, hashToken, newSecret, readStore, loadMasterKey,
          resolveRuntimeDir, resolveStoreFile, pruneSessions, DEFAULT_SITE_NAME, type SettingsStore, type StoreUser } from '../../shared/store.js';
@@ -18,6 +18,7 @@ import { isAllowedHost, isAllowedOrigin, shouldTrustProxy } from '../site-gate.j
 import { resolveListenHost, resolveSiteOrigin } from '../deploy-env.js';
 import { SESSION_COOKIE, SESSION_TTL_MS, serializeCookie, sessionFromReq, userForSession } from './auth.js';
 import { pages } from './pages.js';
+import { readAppVersion } from './version.js';
 import { SlotManager, type Slot } from './slots.js';
 import { proxyToSlot } from './proxy.js';
 import { createLoginThrottle } from './throttle.js';
@@ -48,6 +49,10 @@ function openStore(): { store: SettingsStore; key: Buffer } {
 function saveStore(key: Buffer, store: SettingsStore): void {
   writeStore(resolveStoreFile(), key, pruneSessions(store));
 }
+
+/** The deployed app version, read once at boot (package.json — the value the
+ *  .deb is named after). 'unknown' fallback; the login footer degrades quietly. */
+const APP_VERSION = readAppVersion();
 
 /** The deployment's tab-title name (store.siteName). Absent store, pre-init,
  *  or a corrupt/unreadable store all degrade to the default — a name must
@@ -164,7 +169,7 @@ export function createApp(opts?: { proxy?: express.RequestHandler }): Express {
     const h = storeHealth();
     if (h === 'corrupt') return res.status(500).type('html').send(pages.corrupt(siteName()));
     if (h === 'unconfigured') return res.redirect('/');
-    res.type('html').send(pages.login(siteName()));
+    res.type('html').send(pages.login(siteName(), APP_VERSION));
   });
 
   app.get('/admin', (req, res) => {

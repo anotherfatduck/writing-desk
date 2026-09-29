@@ -498,7 +498,8 @@
   white-space: nowrap;
 }
 
-.library-adopt {
+.library-adopt,
+.library-return {
   font-size: 10px;
   padding: 2px 8px;
   margin-left: 6px;
@@ -512,14 +513,50 @@
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.library-adopt:hover:not(:disabled) {
+.library-adopt:hover:not(:disabled),
+.library-return:hover:not(:disabled) {
   color: var(--accent);
   border-color: var(--accent);
 }
 
-.library-adopt:disabled {
+.library-adopt:disabled,
+.library-return:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+/* Return-to-library confirm strip — under-row, menu-confirm copy (spec 2026-09-19). */
+.return-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 8px 24px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--ink-body);
+}
+
+.return-confirm-q {
+  flex: 1;
+  min-width: 0;
+}
+
+.return-confirm button {
+  flex-shrink: 0;
+  font-size: 10px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-body);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.return-confirm button:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 /* Preview expansion — plain text in a <pre>, no markdown renderer (YAGNI). */
@@ -542,6 +579,34 @@
   border-radius: 6px;
   padding: 8px;
 }
+
+/* Rendered preview — article typography inside the same panel footprint
+   (the palette mirrors .library-preview pre so light/dark both hold). */
+.library-preview-body {
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-body);
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  word-break: break-word;
+}
+.library-preview-body p { margin: 0 0 6px; }
+.library-preview-body p:last-child { margin-bottom: 0; }
+.library-preview-body h1,
+.library-preview-body h2,
+.library-preview-body h3 { margin: 8px 0 4px; line-height: 1.3; font-size: 13px; }
+.library-preview-body :first-child { margin-top: 0; }
+.library-preview-body ul,
+.library-preview-body ol { margin: 0 0 6px; padding-left: 18px; }
+.library-preview-body blockquote { margin: 0 0 6px; padding-left: 8px; border-left: 2px solid var(--border); color: var(--ink-muted); }
+.library-preview-body .footnotes { margin-top: 8px; border-top: 1px solid var(--border); padding-top: 4px; font-size: 11px; }
+.library-preview-body .footnote-item { margin: 0 0 4px; }
+.library-preview-body sup a { text-decoration: none; }
 
 .files-row.library-empty {
   cursor: default;

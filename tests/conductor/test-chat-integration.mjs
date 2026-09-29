@@ -107,6 +107,9 @@ assert(turn1?.toolCalls?.some((c) => c.name === 'read_document' && c.ok), 'turn 
 assert(turn1?.usage?.promptTokens > 0 && turn1?.usage?.completionTokens > 0, 'turn 1 usage recorded');
 assertMetadataRange(fake, gwStart, session1.sessionId, docAId, 'turn 1');
 assert(bodyHasToolResult(fake, gwStart, (c) => c.includes('"markdown"') && c.includes('Ghost Doc')), 'turn 1 read_document result fed back to model includes markdown');
+const read1Summary = turn1?.toolCalls?.find((c) => c.name === 'read_document')?.summary;
+assert(typeof read1Summary === 'string' && read1Summary.length > 0 && !read1Summary.startsWith('{'), 'turn 1 read_document summary is human text (no JSON)');
+assert(read1Summary?.includes('Ghost Doc'), `turn 1 read_document summary cites the doc title (${read1Summary})`);
 
 // 3. Turn 2: propose_edits × 2
 const PROPOSED_1 = 'First proposed section.';
@@ -128,6 +131,7 @@ assert(turn2?.toolCalls?.every((c) => c.name === 'propose_edits' && c.ok), 'turn
 assert(turn2?.usage?.promptTokens > 0 && turn2?.usage?.completionTokens > 0, 'turn 2 usage recorded');
 assertMetadataRange(fake, gwStart, session1.sessionId, docAId, 'turn 2');
 assert(bodyHasToolResult(fake, gwStart, (c) => c.includes('"appliedCount"') && c.includes('"success"')), 'turn 2 propose results fed back to model');
+assert(turn2?.toolCalls?.every((c) => typeof c.summary === 'string' && c.summary.length > 0 && !c.summary.startsWith('{') && c.summary.includes('Staged 1 change')), 'turn 2 propose_edits summaries are human text counting one staged change');
 
 // Pending count is positive
 const overlayA = await getJson(await api(app, 'GET', `/api/pending-entries?docId=${docAId}`));
@@ -169,6 +173,21 @@ const transcript1 = await getJson(await api(app, 'GET', `/api/chat/${docAId}/ses
 assert(transcript1.ended === false, 'session 1 NOT ended by a submit call');
 const fmAfterSubmit = matter(readFileSync(docAPath, 'utf-8')).data;
 assert(!fmAfterSubmit.review, 'no review stamp landed from the chat session');
+
+// 5. Read_workspace turn — the tool-call progress line is human text too.
+gwStart = fake.seenBodies.length;
+fake.script = scriptTurns([
+  { toolCalls: [toolCall('read_workspace', 'w1', {})] },
+  { text: 'You have one draft on the desk.', pt: 30, ct: 10 },
+]);
+const wsRes = await api(app, 'POST', `/api/chat/${docAId}/sessions/${session1.sessionId}/messages`, { text: 'What is on my desk?' });
+const wsTurn = (await getJson(wsRes)).turn;
+assert(wsRes.status === 200, `read_workspace turn returns 200 (got ${wsRes.status})`);
+assert(wsTurn?.finishReason === 'complete', `read_workspace turn completes (got ${wsTurn?.finishReason})`);
+const wsSummary = wsTurn?.toolCalls?.find((c) => c.name === 'read_workspace')?.summary;
+assert(typeof wsSummary === 'string' && wsSummary.length > 0 && !wsSummary.startsWith('{') && wsSummary.includes('Workspace'), `read_workspace summary is human text mentioning Workspace (${wsSummary})`);
+assertMetadataRange(fake, gwStart, session1.sessionId, docAId, 'read_workspace turn');
+assert(bodyHasToolResult(fake, gwStart, (c) => c.includes('"documents"') && c.includes('"workspaces"')), 'workspace result fed back to model unchanged');
 
 // ============================================================================
 // Second session on the same doc: the WRITER submits via the Review tab, then

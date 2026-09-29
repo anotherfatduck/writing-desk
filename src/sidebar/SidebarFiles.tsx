@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import type { SidebarModeProps, DocumentInfo, LibraryArticleInfo } from './sidebar-types';
+import { RETURN_TO_LIBRARY_QUESTION, RETURN_TO_LIBRARY_TITLE } from './return-copy';
 import { useSidebarDrag } from './sidebar-drag';
 import { useRevealActiveDoc } from './use-reveal-active-doc';
 import { showToast } from '../utils/toast';
@@ -57,9 +58,21 @@ export default function SidebarFiles({
   const [selection, setSelection] = useState<Set<string>>(new Set());
   const [anchor, setAnchor] = useState<string | null>(null);
   const [createDropdown, setCreateDropdown] = useState<{ anchor: DOMRect } | null>(null);
+  const [returnConfirm, setReturnConfirm] = useState<string | null>(null);
   const [clearedPending, setClearedPending] = useState<Set<string>>(new Set());
 
   useEffect(() => { setClearedPending(new Set()); }, [pendingDocs]);
+
+  useEffect(() => {
+    if (!returnConfirm) return;
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Element | null;
+      if (t && t.closest('.return-confirm')) return;
+      setReturnConfirm(null);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [returnConfirm]);
 
   selectionRef.current = selection;
   clearSelectionRef.current = () => { setSelection(new Set()); setAnchor(null); };
@@ -104,15 +117,15 @@ export default function SidebarFiles({
     return folders.filter(f => f.articles.length > 0);
   }, [library.data]);
 
-  const [preview, setPreview] = useState<{ docId: string; body: string | null } | null>(null);
+  const [preview, setPreview] = useState<{ docId: string; html: string | null; body: string | null } | null>(null);
 
   const handlePreview = useCallback((docId: string) => {
     if (preview?.docId === docId) { setPreview(null); return; }
-    setPreview({ docId, body: null });
+    setPreview({ docId, html: null, body: null });
     fetch(`/api/library/${encodeURIComponent(docId)}`)
       .then(res => res.ok ? res.json() : null)
       .then(d => {
-        if (d && typeof d.body === 'string') setPreview(cur => cur?.docId === docId ? { docId, body: d.body } : cur);
+        if (d && typeof d.body === 'string') setPreview(cur => cur?.docId === docId ? { docId, html: typeof d.html === 'string' ? d.html : null, body: d.body } : cur);
         else setPreview(cur => cur?.docId === docId ? null : cur);
       })
       .catch(() => setPreview(cur => cur?.docId === docId ? null : cur));
@@ -311,7 +324,26 @@ export default function SidebarFiles({
                   );
                 })()}
                 {isPending(doc.filename) && !clearedPending.has(doc.filename) && <span className="files-badge-pending" />}
+                {doc.libraryKey && doc.reviewGate?.phase === 'published' && doc.docId
+                  && renaming?.key !== doc.filename && returnConfirm !== doc.filename && (
+                  <button
+                    className="library-return"
+                    title={RETURN_TO_LIBRARY_TITLE}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); setReturnConfirm(doc.filename); }}
+                  >
+                    Return
+                  </button>
+                )}
               </div>
+              {returnConfirm === doc.filename && doc.libraryKey
+                && doc.reviewGate?.phase === 'published' && doc.docId && (
+                <div className="return-confirm" onClick={(e) => e.stopPropagation()}>
+                  <span className="return-confirm-q">{RETURN_TO_LIBRARY_QUESTION}</span>
+                  <button onClick={() => { setReturnConfirm(null); handleRestoreFromLibrary(doc.docId as string); }}>Yes</button>
+                  <button onClick={() => setReturnConfirm(null)}>No</button>
+                </div>
+              )}
               {writingTitle && writingTarget?.parentDocId && writingTarget.parentDocId === doc.docId && (
                 <div className="sidebar-item sidebar-writing-placeholder" style={{ paddingLeft: 28 }}>
                   <div className="sidebar-item-title">
@@ -384,7 +416,11 @@ export default function SidebarFiles({
                     </div>
                     {preview?.docId === a.docId && (
                       <div className="library-preview">
-                        <pre>{preview?.body ?? 'Loading…'}</pre>
+                        {preview?.html ? (
+                          <div className="library-preview-body" dangerouslySetInnerHTML={{ __html: preview.html }} />
+                        ) : (
+                          <pre>{preview?.body ?? 'Loading…'}</pre>
+                        )}
                       </div>
                     )}
                   </React.Fragment>
@@ -404,7 +440,7 @@ export default function SidebarFiles({
         // Return-to-library: the one write out of the library area, and it
         // lives on the adopted DESK doc's menu (its libraryKey is non-null).
         const ctxDoc = docs.find(d => d.filename === ctxMenu.filename);
-        const restore = ctxDoc?.libraryKey && ctxDoc.docId
+        const restore = ctxDoc?.libraryKey && ctxDoc.reviewGate?.phase === 'published' && ctxDoc.docId
           ? () => handleRestoreFromLibrary(ctxDoc.docId as string)
           : undefined;
         return (

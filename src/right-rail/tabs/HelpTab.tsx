@@ -5,10 +5,12 @@
  * adr: adr/right-rail.md
  */
 import type { RightRailTabProps } from '../types';
+import { APP_VERSION } from '../../app-version';
 
 export default function HelpTab(_props: RightRailTabProps) {
   return (
     <div className="help-tab">
+      <p className="help-version">Writer app v{APP_VERSION}</p>
       <div className="appearance-section">
         <div className="appearance-section-header">
           <span className="appearance-section-title">The flow</span>

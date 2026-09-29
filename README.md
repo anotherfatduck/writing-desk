@@ -2,7 +2,11 @@
 
 A hosted writing app where writers work with an AI agent in plain language — and a human approves every change before it ships.
 
+![A draft on the desk with two agent proposals staged for review](shot-desk.png)
+
 Writers open a browser and get a desk: a Markdown editor, a library of past articles, and a chat rail. They describe what they want in ordinary language — "tighten the intro, keep my voice" — and an agent proposes edits. The proposals never touch the document directly: they wait on a Review tab as pending changes, shown side by side, until the writer accepts or rejects them. Accepted work is submitted for review, committed to a git branch, and ships only when a human merges it.
+
+![The chat rail: plain-language requests, plain-language answers, proposals staged — never applied unasked](shot-chat.png)
 
 The agent is good company and a fast pair of hands; the human is the editor of record. That division is not a UI choice — it is enforced structurally.
 
@@ -24,13 +28,17 @@ The agent is good company and a fast pair of hands; the human is the editor of r
 - `packaging/` — the immutable Debian package: systemd units, conffiles, nginx splice
 - `tests/` — the gates that keep all of the above honest
 
+![The same desk in the dark theme](shot-dark.png)
+
 ## What running it takes
 
-This was built for one small, specific deployment, and the code says so honestly. It deploys as an immutable `.deb` on a Linux host behind nginx; the approval flow expects a git server speaking Gitea's API (Gitea itself is free software); models come from any OpenAI-compatible gateway (LiteLLM works); writers need nothing but a browser. There is no quickstart — `packaging/` and `orchestrator/deploy/README-ops.md` show the intended shape, and the code is the record of how it was built.
+This was built for one small, specific deployment, and the code says so honestly. It deploys as an immutable `.deb` on a Linux host behind nginx; the approval flow expects a git server speaking Gitea's API (Gitea itself is free software); models come from any OpenAI-compatible gateway (LiteLLM works); writers need nothing but a browser. [INSTALL.md](INSTALL.md) walks the shape of an install; `orchestrator/deploy/README-ops.md` is the full runbook. The code is the record of how it was built.
 
 ## Lineage
 
 Writing Desk began as a fork of [OpenWriter](https://github.com/travsteward/openwriter) (MIT) — a strong editor whose upstream went dark in July 2026. The editor chrome descends from OpenWriter; the human-approval review gate, the agent loop, the git orchestrator, and the packaging are new. See [LICENSE](LICENSE) for the full attribution.
+
+How it was built, and by what: most of the code is AI-assisted — the disclosure is [AI-DISCLOSURE.md](AI-DISCLOSURE.md).
 
 ## License
 

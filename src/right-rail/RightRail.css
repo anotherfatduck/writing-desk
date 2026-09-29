@@ -1598,6 +1598,11 @@
   margin: 0 0 8px;
 }
 
+.help-tab p.help-version {
+  color: var(--ink-muted);
+  margin: 0 0 10px;
+}
+
 .help-tab p:last-child { margin-bottom: 0; }
 
 .help-tab ol {

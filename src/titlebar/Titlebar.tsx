@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { useRightRail } from '../right-rail/RightRailContext';
 import { OpenRailIcon, FocusModeIcon } from '../right-rail/icons';
+import { APP_VERSION } from '../app-version';
 import PendingTitleField from '../components/PendingTitleField';
 
 interface TitlebarProps {
@@ -226,6 +227,7 @@ export default function Titlebar({
         >
           {chipLabel}
         </span>
+        <span className="titlebar-version">v{APP_VERSION}</span>
       </div>
     </div>
   );

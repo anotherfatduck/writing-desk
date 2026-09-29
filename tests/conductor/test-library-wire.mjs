@@ -7,7 +7,7 @@
 //      (`{ articles: [{docId,key,title,series,topics,publishedAt,checkedOut}],
 //      categories: {series, topics} }`) — the server derives the taxonomy ∪,
 //      the client only renders it;
-//   3. `GET /api/library/:docId` (the row preview) returns `{ title, body }`,
+//   3. `GET /api/library/:docId` (the row preview) returns `{ title, body, html }`,
 //      and a shelf write pushes the `library-changed` frame name.
 //
 // The client half (§1) is driven through the real `src/ws/client.ts` module —
@@ -16,16 +16,22 @@
 // Everything else follows tests/conductor/test-library-routes.mjs (built app via
 // bootApp, tmpdir shelf fixtures, hand-rolled asserts).
 // adr: adr/0007-git-orchestrator-dumb-host-side.md
-import { mkdirSync, writeFileSync } from 'fs';
+import { execFileSync } from 'child_process';
+import { mkdirSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { createServer } from 'net';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { build } from 'esbuild';
 import WebSocket from 'ws';
 import { bootApp, shutdown, api } from '../spike-a/lib/spike.mjs';
 
 const REPO = fileURLToPath(new URL('../../', import.meta.url));
+const distPath = fileURLToPath(new URL('../../dist/server/library-render.js', import.meta.url));
+if (!existsSync(distPath)) {
+  execFileSync('npx', ['tsc', '-p', 'tsconfig.server.json'], { cwd: REPO, stdio: 'ignore' });
+}
+const { renderLibraryPreview } = await import(pathToFileURL(distPath).href);
 
 let failed = 0;
 const assert = (cond, msg) => { if (cond) console.log(`  ok: ${msg}`); else { failed++; console.error(`  FAIL: ${msg}`); } };
@@ -163,16 +169,17 @@ writeFileSync(join(libDir, 'taxonomy.json'), JSON.stringify({ series: ['HG', 'WI
 }
 
 // ============================================================================
-// 3. GET /api/library/:docId — the row preview the client renders in a <pre>.
+// 3. GET /api/library/:docId — the row preview the client renders as article HTML with a <pre> fallback.
 // ============================================================================
 {
   const res = await api(app, 'GET', `/api/library/${DOC_A}`);
   const body = await res.json();
   assert(res.status === 200, `GET /api/library/:docId → 200 (got ${res.status})`);
-  assertDeep(Object.keys(body).sort(), ['body', 'title'], 'preview payload: exactly { title, body }');
+  assertDeep(Object.keys(body).sort(), ['body', 'html', 'title'], 'preview payload: exactly { title, body, html }');
   assert(body.title === 'First Article', `preview payload: title from the mirror head (got ${body.title})`);
   assert(body.body.includes('First article body.') && !body.body.includes('docId:'),
     'preview payload: body is the matter-stripped markdown');
+  assert(body.html === renderLibraryPreview(body.body), 'preview payload: html equals renderLibraryPreview(body)');
 }
 
 // ============================================================================

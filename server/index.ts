@@ -14,6 +14,7 @@ import { TOOL_REGISTRY } from './mcp.js';
 import { z } from 'zod';
 import { save, cancelDebouncedSave, load, getDocument, getTitle, getFilePath, getDocId, getDocVersion, getMetadata, getStatus, updateDocument, setMetadata, applyTextEdits, isAgentLocked, getPendingDocInfo, getOverlayEntries, getDocTagsByFilename, addDocTag, removeDocTag, markAllNodesAsPending, updatePendingCacheForActiveDoc, removePendingCacheEntry, clearAllCaches, stripPendingAttrs, stripPendingAttrsFromFile, setAutoAcceptOnFile, bumpDocVersion, markAsAgentStub, extractText, quiesce, unquiesce, isQuiesced } from './state.js';
 import { listDocuments, switchDocument, createDocument, deleteDocument, duplicateDocument, createVariant, reloadDocument, updateDocumentTitle, openFile, reorderDocs, searchDocuments, listArchivedDocuments, archiveDocument, unarchiveDocument, getActiveFilename, resolveDocId, batchResolve, resolveOverlayEntry, listLibraryDocs, readLibraryDoc, adoptLibraryDoc, restoreLibraryDoc } from './documents.js';
+import { renderLibraryPreview } from './library-render.js';
 import { markdownToTiptap } from './markdown.js';
 import { readStore, loadMasterKey, resolveRuntimeDir, resolveStoreFile, DEFAULT_SITE_NAME } from '../shared/store.js';
 import matter from 'gray-matter';
@@ -859,7 +860,8 @@ export async function startHttpServer(options: { port?: number; noOpen?: boolean
 
   app.get('/api/library/:docId', (req, res) => {
     try {
-      res.json(readLibraryDoc(req.params.docId));
+      const doc = readLibraryDoc(req.params.docId);
+      res.json({ ...doc, html: renderLibraryPreview(doc.body) });
     } catch (err: any) {
       // A bad docId (400) is the caller's mistake; a missing mirror is 404.
       const status = err?.status ?? (err?.code === 'ENOENT' ? 404 : 500);
